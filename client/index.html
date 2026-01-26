@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Logga in</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Logga in</h2>
+
+<form id="loginForm">
+  <input type="email" id="email" placeholder="E-post" required><br>
+  <input type="password" id="password" placeholder="Lösenord" required><br>
+  <button type="submit">Logga in</button>
+</form>
+
+<p id="msg"></p>
+
+<script src="api.js"></script>
+<script>
+document.getElementById("loginForm").onsubmit = async function(e) {
+  e.preventDefault();
+
+  try {
+    const data = await apiRequest("/auth/login", "POST", {
+      email: document.getElementById("email").value,
+      password: document.getElementById("password").value
+    });
+
+    localStorage.setItem("token", data.token);
+    window.location.href = "search.html";
+  } catch {
+    document.getElementById("msg").innerText = "Inloggning misslyckades";
+  }
+};
+</script>
+
+</body>
+</html>
