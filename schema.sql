@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS hotel_booking;
+CREATE DATABASE IF NOT EXISTS hotel_booking
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 USE hotel_booking;
@@ -45,6 +45,7 @@ CONSTRAINT fk_booking_user
 CREATE INDEX idx_booking_dates ON bookings(start_date, end_date);
 CREATE INDEX idx_booking_user ON bookings(user_id);
 CREATE INDEX idx_booking_room ON bookings(room_id);
+
 
 
 
