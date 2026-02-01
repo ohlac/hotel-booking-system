@@ -1,15 +1,15 @@
-require('dotenv').config(); // Hämtar inställningar från .env
+require('dotenv').config(); // inställningarna från .env
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 
 const app = express();
 
-// Tillåt frontend att prata med backend
+// frontend prata med backend
 app.use(cors());
-app.use(express.json()); // Gör så att vi kan läsa JSON-data
+app.use(express.json()); // för att kunna läsa JSON-data
 
-// 1. Skapa kopplingen till Aiven-databasen
+// kopplingen till Aiven-databasen
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -24,12 +24,12 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// Test-route: Startsidan för API:et
+// Test-route för att se att servern fungerar
 app.get('/', (req, res) => {
     res.send('Hotell-API:et fungerar och körs!');
 });
 
-// 2. Route för att hämta alla rum
+// route för att hämta alla rum
 // När frontend anropar /api/rooms, körs denna kod
 app.get('/api/rooms', async (req, res) => {
     try {
