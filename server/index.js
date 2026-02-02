@@ -26,7 +26,7 @@ const pool = mysql.createPool({
 
 // Test-route för att se att servern fungerar
 app.get('/', (req, res) => {
-    res.send('Hotell-API:et fungerar och körs!');
+    res.send('Hotell-API:et fungerar');
 });
 
 // route för att hämta alla rum
