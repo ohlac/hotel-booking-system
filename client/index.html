@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Logga in</title>
@@ -7,35 +7,105 @@
 </head>
 
 <body>
+  <div class="page-frame">
 
-<h2>Logga in</h2>
+    <header class="title-bar">
+      <h1>Hotel Booking System: Home Page</h1>
+    </header>
 
-<form id="loginForm">
-  <input type="email" id="email" placeholder="E-post" required><br>
-  <input type="password" id="password" placeholder="Lösenord" required><br>
-  <button type="submit">Logga in</button>
-</form>
+    <main class="main-box">
 
-<p id="msg"></p>
+      <section class="top-area">
+        <div class="logo-circle">Logo</div>
 
-<script src="api.js"></script>
-<script>
-document.getElementById("loginForm").onsubmit = async function(e) {
-  e.preventDefault();
+        <nav class="nav">
+          <a class="nav-btn active" href="#">Find a Room</a>
+          <a class="nav-btn" href="#">Hotel Information</a>
+          <a class="nav-btn" href="#">User Page / Bookings</a>
+          <a class="nav-btn" href="#">Log In</a>
+          <a class="nav-btn admin-hidden" href="#">Admin</a>
+        </nav>
+      </section>
 
-  try {
-    const data = await apiRequest("/auth/login", "POST", {
-      email: document.getElementById("email").value,
-      password: document.getElementById("password").value
-    });
+      <section class="find-panel">
+        <h2>Find a Room</h2>
 
-    localStorage.setItem("token", data.token);
-    window.location.href = "search.html";
-  } catch {
-    document.getElementById("msg").innerText = "Inloggning misslyckades";
-  }
-};
-</script>
+        <div class="find-form">
+          <div class="field">
+            <label>Check-in date</label>
+            <input type="date" class="real-input">
+          </div>
 
+          <div class="field">
+            <label>Check-out date</label>
+            <input type="date" class="real-input">
+          </div>
+
+          <div class="field">
+            <label>Room type</label>
+            <select class="real-input">
+              <option>Select</option>
+              <option>Single</option>
+              <option>Double</option>
+              <option>Suite</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="search-btn">Search</button>
+      </section>
+
+      <div class="section-title">Available Rooms</div>
+
+      <section class="rooms">
+        <article class="room-card">
+          <div class="room-text">
+            <h3 class="room-title">Room title</h3>
+            <p class="room-desc">Short room description</p>
+            <p class="room-desc">More details here</p>
+          </div>
+          <div class="img-placeholder">Image</div>
+        </article>
+
+        <article class="room-card">
+          <div class="room-text">
+            <h3 class="room-title">Room title</h3>
+            <p class="room-desc">Short room description</p>
+            <p class="room-desc">More details here</p>
+          </div>
+          <div class="img-placeholder">Image</div>
+        </article>
+
+        <article class="room-card">
+          <div class="room-text">
+            <h3 class="room-title">Room title</h3>
+            <p class="room-desc">Short room description</p>
+            <p class="room-desc">More details here</p>
+          </div>
+          <div class="img-placeholder">Image</div>
+        </article>
+      </section>
+
+      <footer class="footer-bar">
+        <div class="footer-col">
+          <div class="footer-title">Contact Information</div>
+          <div class="mini-line"></div>
+          <div class="mini-line"></div>
+          <div class="mini-line"></div>
+        </div>
+
+        <div class="footer-col">
+          <div class="footer-title">Address</div>
+          <div class="mini-line"></div>
+          <div class="mini-line"></div>
+        </div>
+
+        <div class="footer-col footer-right">
+          <div class="footer-title">Copyright</div>
+        </div>
+      </footer>
+
+    </main>
+  </div>
 </body>
 </html>
