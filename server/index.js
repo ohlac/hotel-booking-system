@@ -17,26 +17,25 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME,
     port: process.env.DB_PORT,
     ssl: {
-        rejectUnauthorized: false // Krävs ofta för Aiven
+        rejectUnauthorized: false
     },
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 });
 
-// Test-route för att se att servern fungerar
+// Test för att se att servern fungerar
 app.get('/', (req, res) => {
     res.send('Hotell-API:et fungerar');
 });
 
-// route för att hämta alla rum
-// När frontend anropar /api/rooms, körs denna kod
+// hämta alla rum
 app.get('/api/rooms', async (req, res) => {
     try {
         // Ställ en fråga till databasen
         const [rows] = await pool.promise().query('SELECT * FROM rooms');
         
-        // Skicka tillbaka svaret (rummen) till frontend
+        // Skicka tillbaka rum
         res.json(rows);
     } catch (error) {
         console.error('Fel vid hämtning av rum:', error);

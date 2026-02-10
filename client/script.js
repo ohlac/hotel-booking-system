@@ -1,11 +1,11 @@
-const API_URL = 'https://hotel-api-67w7.onrender.com/api/rooms';
+const API_länk = 'https://hotel-api-67w7.onrender.com/api/rooms';
 
 const roomsContainer = document.getElementById('rooms-container');
 
 async function getRooms() {
     try {
         // Hämta data från Backend
-        const response = await fetch(API_URL);
+        const response = await fetch(API_länk);
         
         if (!response.ok) {
             throw new Error('Kunde inte nå servern');
