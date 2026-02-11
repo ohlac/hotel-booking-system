@@ -38,27 +38,51 @@ body {
   min-height: 85vh;
 }
 
-.top-area {
+.top-area{
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 20px;
+  flex-wrap: nowrap;
   margin-bottom: 30px;
 }
 
+.logo-text{
+  font-size: 32px;
+  font-weight: 800;
+  font-family: Arial,  sans-serif;
+  letter-spacing: -1px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.logo-text .c1{
+  color: #e74c3c;
+}
+
+.logo-text .c2{
+  color: #f39c12;
+
+}
+.logo-text .c3{
+  color: #3498db;
+}
+
 .logo-circle {
-  width: 54px;
-  height: 54px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: #cfd2d8;
+  background: #4a4f57;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
 }
 
 .nav {
   display: flex;
   gap: 12px;
+  flex-wrap: nowrap;
+  margin-left: auto;
 }
 
 .nav-btn {
@@ -123,14 +147,27 @@ body {
 
   /* Home Page */
 
+.hero{
+  background-image: url("./images.hero.jpg");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  
+
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  }
+
 .find-panel {
-  background: #cfd2d8;
+  background: rgba(225, 225, 225, 0.85);
   padding: 28px;
-  border-radius: 6px;
+  border-radius: 8px;
   width: 700px;
-  max-width: 100%;
-  margin: 0 auto 30px auto;
+  max-width: 90%;
   text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .find-panel h2 {
@@ -146,10 +183,9 @@ body {
 }
 
 .search-btn{
-  grid-column: 3;
+  grid-column: 1 / -1;
   justify-self: end;
-  margin-top: 18px;
- 
+  margin-top: 10px;
 }
 
 .field {
@@ -185,11 +221,13 @@ body {
   border-radius: 4px;
 }
 
-.rooms {
-  display: grid;
-  gap: 20px;
-  margin-bottom: 30px;
+
+.rooms{
+  width: 700px;
+  max-width: 100%;
+  margin: 0 auto 30px auto;
 }
+
 
 .room-card {
   background: #d3d6db;
