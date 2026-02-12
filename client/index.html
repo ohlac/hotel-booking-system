@@ -3,13 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="content-Language" content="en">
   <title>Hotellbokning</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <div class="page-frame">
-
     <main class="main-box">
+
       <section class="top-area">
         <div class="logo-text">
           <span class="c1">Cali</span><span class="c2">for</span><span class="c3">nia</span>
@@ -24,65 +28,76 @@
         </nav>
       </section>
 
-      <h1 id="Welcome">Welcome to Hotel California!</h1>
-      <h3 id="seeavailable">Find available rooms below! (Not working yet)</h3>
-      <br><br>
-
       <section class="hero">
-        <div class="find-panel">
-          <h2>Find a Room</h2>
-          
-          <form class="find-form">
-            <div class="field">
-              <label>Check-in date</label>
-              <input type="date" class="real-input">
-            </div>
+        <div class="hero-overlay"></div>
 
-          <div class="field">
-            <label>Check-out date</label>
-            <input type="date" class="real-input">
+        <div class="hero-content">
+          <h1>Welcome to Hotel California</h1>
+          <p>Find available rooms below! (Not working yet)</p>
+
+          <div class="find-panel">
+            <h2>Find a Room</h2>
+
+            <form class="find-form">
+              <div class="field">
+                <label>Check-in date</label>
+                <input type="date" class="real-input">
+              </div>
+
+              <div class="field">
+                <label>Check-out date</label>
+                <input type="date" class="real-input">
+              </div>
+
+              <div class="field">
+                <label>Room type</label>
+                <select class="real-input">
+                  <option>Single</option>
+                  <option>Double</option>
+                  <option>Suite</option>
+                </select>
+              </div>
+
+              <button class="search-btn" type="submit">Search</button>
+            </form>
           </div>
-        
+        </div>
+      </section>
 
-          <div class="field">
-            <label>Room type</label>
-            <select class="real-input">
-                <option>Single</option>
-                <option>Double</option>
-                <option>Suite</option>
-            </select>
-          </div>
-          <button class="search-btn">Search</button>
-        </form>
-      </div>
-      
-    </section>
-
-      <div class="section-title">Available Rooms</div>
+      <div class="section-title">Choose Your Retreat</div>
 
       <section class="rooms" id="rooms-container">
-        <p style="text-align: center; grid-column: 1/-1;">Laddar rum från databasen...</p>
+        <p style="text-align: center; grid-column: 1/-1;">
+          Laddar rum från databasen...
+        </p>
       </section>
 
       <footer class="footer-bar">
         <div class="footer-col">
           <div class="footer-title">Contact Information</div>
+          <p>📞 +46 520 123 456</p>
+          <p>✉ info@hotelcalifornia.se</p>
+          <p>🕒 Reception Open 24 Hours</p>
+          <p>🌐 www.hotelcalifornia.se</p>
         </div>
 
         <div class="footer-col">
           <div class="footer-title">Address</div>
-          <p>Hotel California<br>
-          Gustava Melins gata 2<br>
-          461 32 Trollhättan
+          <p>
+            Hotel California<br>
+            Gustava Melins gata 2<br>
+            461 32 Trollhättan
           </p>
         </div>
 
         <div class="footer-col footer-right">
           <div class="footer-title">Copyright</div>
+          <p>© 2026 Hotel California</p>
         </div>
       </footer>
 
     </main>
+
     <script src="script.js"></script>
   </div>
 </body>

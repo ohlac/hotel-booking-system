@@ -18,24 +18,34 @@ async function getRooms() {
 
         // Loopa igenom varje rum och skapa HTML
         rooms.forEach(room => {
-            
+            let imagePath = '';
+            if (room.type === 'Enkelrum') {
+                imagePath = 'images/single.jpg';
+            } else if (room.type === 'Dubbelrum') {
+                imagePath = 'images/double.jpg';
+            } else {
+                imagePath = 'images/suite.jpg';
+            }
             // Skapa kortet
             const roomCard = document.createElement('article');
             roomCard.classList.add('room-card');
 
             // Fyll kortet med innehåll. 
             roomCard.innerHTML = `
-                <div class="room-text">
-                    <h3 class="room-title">Rum ${room.room_number} - ${room.type}</h3>
+                 <div class="room-text">
+                    <h3 class="room-title">Room ${room.room_number} - ${room.type}</h3>
                     <p class="room-desc">${room.description}</p>
-                    <p class="room-desc" style="font-weight: bold;">Pris: ${room.price_per_night} kr/natt</p>
-                    <button class="search-btn" style="margin-top: 10px;" onclick="alert('Boka-funktion kommer snart!')">Boka</button>
+                    <p class="room-desc" style="font-weight: bold;">
+                        Price: ${room.price_per_night} kr/night
+                    </p>
+                    <button class="search-btn" onclick="alert('Booking coming soon!')">
+                        Book
+                    </button>
                 </div>
-                <div class="img-placeholder">
-                    Bild på ${room.type}
+                <div class="room-image">
+                    <img src="${imagePath}" alt="${room.type}">
                 </div>
             `;
-
             // Lägg in kortet i containern
             roomsContainer.appendChild(roomCard);
         });
