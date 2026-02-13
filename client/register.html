@@ -8,15 +8,55 @@
 </head>
 
 <body>
+  <div class="page-frame">
+    <main class="main-box">
 
-<main class="main-box">
-  <section class="top-area">
-        <div class="logo-text">
-            <span class="c1">Cali</span><span class="c2">for</span><span class="c3">nia</span>
+      <section class="top-area">
+
+        <div class="logo">
+          <div class="logo-mark" aria-label="California logo">
+            <svg class="logo-svg" viewBox="0 0 220 140" role="img">
+              <defs>
+                <radialGradient id="sunGrad" cx="45%" cy="40%" r="70%">
+                  <stop offset="0%" stop-color="var(--sun-1)"/>
+                  <stop offset="55%" stop-color="var(--sun-2)"/>
+                  <stop offset="100%" stop-color="var(--sun-3)"/>
+                </radialGradient>
+
+                <linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="var(--wave-1)"/>
+                  <stop offset="55%" stop-color="var(--wave-2)"/>
+                  <stop offset="100%" stop-color="var(--wave-3)"/>
+                </linearGradient>
+              </defs>
+
+              <circle cx="150" cy="58" r="44" fill="url(#sunGrad)"/>
+
+              <path d="M22 110
+                       C55 95, 85 98, 110 108
+                       C140 120, 170 120, 202 106
+                       L202 120
+                       C168 134, 136 136, 108 126
+                       C80 116, 52 114, 22 126 Z"
+                    fill="url(#waveGrad)"/>
+
+              <g fill="none" stroke="var(--ink)" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M72 48 C62 66, 60 86, 64 110" stroke-width="8"/>
+                <path d="M74 44 C48 30, 30 30, 18 44 C34 42, 48 44, 62 52" stroke-width="6"/>
+                <path d="M76 44 C56 18, 44 12, 34 18 C48 22, 58 30, 70 50" stroke-width="6"/>
+                <path d="M78 44 C104 26, 126 26, 142 42 C120 40, 104 44, 86 54" stroke-width="6"/>
+                <path d="M78 46 C92 18, 108 12, 124 18 C108 22, 96 32, 82 54" stroke-width="6"/>
+
+              </g>
+            </svg>
+          </div>
+
+          <div class="logo-text">
+            <div class="logo-name">California</div>
+            <div class="logo-divider"></div>
+          </div>
         </div>
 
-
-        
         <nav class="nav">
           <a class="nav-btn active" href="index.html">Find a Room</a>
           <a class="nav-btn" href="hotel-info.html">Hotel Information</a>
@@ -24,46 +64,47 @@
           <a class="nav-btn" href="login.html">Log In</a>
           <a class="nav-btn admin-hidden" href="admin.html">Admin</a>
         </nav>
-  </section>
 
-  <section class="login-info">
-    <p>
-      Register to manage your room bookings and adjust user settings:<br>
-      (Or to see admin page for admins)
-    </p>
-  </section>
+      </section>
 
-  <section class="login-box">
-    <div class="login-form">
+      <section class="login-info">
+        <p>
+          Register to manage your room bookings and adjust user settings:<br>
+          (Or to see admin page for admins)
+        </p>
+      </section>
 
-      <div class="login-left">
-        <label>E-Mail:</label>
-        <input type="email" class="real-input">
+      <section class="login-box">
+        <div class="login-form">
 
-        <label>Username:</label>
-        <input type="text" class="real-input">
+          <div class="login-left">
+            <label>E-Mail:</label>
+            <input type="email" class="real-input">
 
-        <label>Full Name:</label>
-        <input type="text" class="real-input">
+            <label>Username:</label>
+            <input type="text" class="real-input">
 
-        <label>Password:</label>
-        <input type="password" class="real-input">
+            <label>Full Name:</label>
+            <input type="text" class="real-input">
 
-        <label>Repeat Password:</label>
-        <input type="password" class="real-input">
-      </div>
+            <label>Password:</label>
+            <input type="password" class="real-input">
 
-      <div class="login-right">
-        <label>Remember Me:</label>
-        <div class="remember-box">X</div>
+            <label>Repeat Password:</label>
+            <input type="password" class="real-input">
+          </div>
 
-        <button class="search-btn">Register</button>
-      </div>
+          <div class="login-right">
+            <label>Remember Me:</label>
+            <div class="remember-box">X</div>
 
-    </div>
-  </section>
+            <button class="search-btn">Register</button>
+          </div>
 
-  <footer class="footer-bar">
+        </div>
+      </section>
+
+      <footer class="footer-bar">
         <div class="footer-col">
           <div class="footer-title">Contact Information</div>
           <p>📞 +46 520 123 456</p>
@@ -74,9 +115,10 @@
 
         <div class="footer-col">
           <div class="footer-title">Address</div>
-          <p>Hotel California<br>
-          Gustava Melins gata 2<br>
-          461 32 Trollhättan
+          <p>
+            Hotel California<br>
+            Gustava Melins gata 2<br>
+            461 32 Trollhättan
           </p>
         </div>
 
@@ -86,7 +128,7 @@
         </div>
       </footer>
 
-</main>
-
+    </main>
+  </div>
 </body>
 </html>

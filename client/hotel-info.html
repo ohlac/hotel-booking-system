@@ -4,86 +4,146 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hotel Booking System: Hotel Information</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
+<div class="page-frame">
+<main class="main-box">
 
-  <main class="main-box">
-    <section class="top-area">
-      <div class="logo-text">
-        <span class="c1">Cali</span><span class="c2">for</span><span class="c3">nia</span>
-      </div>
-        
+<section class="top-area">
 
-      <nav class="nav">
-        <a class="nav-btn" href="index.html">Find a Room</a>
-        <a class="nav-btn active" href="hotel-info.html">Hotel Information</a>
-        <a class="nav-btn" href="user.html">User Page / Bookings</a>
-        <a class="nav-btn" href="login.html">Log In</a>
-        <a class="nav-btn admin-hidden" href="admin.html">Admin</a>
-      </nav>
-    </section>
+<div class="logo">
+<div class="logo-mark">
+<svg class="logo-svg" viewBox="0 0 220 140">
 
-    <section class="hotel-info-page">
+<defs>
+<radialGradient id="sunGrad" cx="45%" cy="40%" r="70%">
+<stop offset="0%" stop-color="#ffcf7a"/>
+<stop offset="55%" stop-color="#e58c2a"/>
+<stop offset="100%" stop-color="#b85a12"/>
+</radialGradient>
 
-      <h2 class="hotel-title">Hotel California</h2>
+<linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0%" stop-color="#1aa6a8"/>
+<stop offset="55%" stop-color="#0f6f82"/>
+<stop offset="100%" stop-color="#0a4a63"/>
+</linearGradient>
 
-      <div class="hotel-desc">
-        <div class="hotel-subtitle">Description</div>
-        <p>This hotel is perfect for travellers looking for a cozy place to stay the night!
-          We offer free breakfast for all guests.
-        </p>
-      </div>
-      <br><br>
+<filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+<feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.35)"/>
+</filter>
+</defs>
 
-      <div class="hotel-grid">
-        <div class="hotel-address">
-          <div class="hotel-subtitle">Adress</div>
-          <p>Hotel California<br>
-          Gustava Melins gata 2<br>
-          461 32 Trollhättan
-          </p>
-        </div>
+<circle cx="150" cy="58" r="44" fill="url(#sunGrad)" filter="url(#softShadow)"/>
 
-        <div class="hotel-map">
-          Google Maps Embed
-        </div>
-      </div>
+<path d="M22 110
+C55 95, 85 98, 110 108
+C140 120, 170 120, 202 106
+L202 120
+C168 134, 136 136, 108 126
+C80 116, 52 114, 22 126 Z"
+fill="url(#waveGrad)" opacity="0.92" filter="url(#softShadow)"/>
 
-      <div class="hotel-pics-title">Pictures of the Hotel</div>
+<g fill="none" stroke="#389410" stroke-linecap="round" stroke-linejoin="round" filter="url(#softShadow)">
+<path d="M72 48 C62 66, 60 86, 64 110" stroke-width="8"/>
 
-      <div class="hotel-slider">
-        <div class="slider-arrow left">◀</div>
-        <div class="slider-img"></div>
-        <div class="slider-arrow right">▶</div>
-      </div>
+<path d="M74 44 C48 30, 30 30, 18 44 C34 42, 48 44, 62 52" stroke-width="6"/>
+<path d="M76 44 C56 18, 44 12, 34 18 C48 22, 58 30, 70 50" stroke-width="6"/>
+<path d="M78 44 C104 26, 126 26, 142 42 C120 40, 104 44, 86 54" stroke-width="6"/>
+<path d="M78 46 C92 18, 108 12, 124 18 C108 22, 96 32, 82 54" stroke-width="6"/>
 
-    </section>
+</g>
 
-    <footer class="footer-bar">
-        <div class="footer-col">
-          <div class="footer-title">Contact Information</div>
-          <p>📞 +46 520 123 456</p>
-          <p>✉ info@hotelcalifornia.se</p>
-          <p>🕒 Reception Open 24 Hours</p>
-          <p>🌐 www.hotelcalifornia.se</p>
-        </div>
+</svg>
+</div>
 
-        <div class="footer-col">
-          <div class="footer-title">Address</div>
-          <p>Hotel California<br>
-          Gustava Melins gata 2<br>
-          461 32 Trollhättan
-          </p>
-        </div>
+<div class="logo-text">
+<div class="logo-name">California</div>
+<div class="logo-divider"></div>
+</div>
+</div>
 
-        <div class="footer-col footer-right">
-          <div class="footer-title">Copyright</div>
-          <p>© 2026 Hotel California</p>
-        </div>
-      </footer>
+<nav class="nav">
+<a class="nav-btn" href="index.html">Find a Room</a>
+<a class="nav-btn active" href="hotel-info.html">Hotel Information</a>
+<a class="nav-btn" href="user.html">User Page / Bookings</a>
+<a class="nav-btn" href="login.html">Log In</a>
+<a class="nav-btn admin-hidden" href="admin.html">Admin</a>
+</nav>
 
-  </main>
+</section>
+
+<section class="hotel-info-page">
+
+<h2 class="hotel-title">Hotel California</h2>
+
+<div class="hotel-desc">
+<div class="hotel-subtitle">Description</div>
+<p>
+This hotel is perfect for travellers looking for a cozy place to stay the night!
+We offer free breakfast for all guests.
+</p>
+</div>
+
+<div class="hotel-grid">
+
+<div class="hotel-address">
+<div class="hotel-subtitle">Address</div>
+<p>
+Hotel California<br>
+Gustava Melins gata 2<br>
+461 32 Trollhättan
+</p>
+</div>
+
+<div class="hotel-map">
+<iframe
+src="https://www.google.com/maps?q=Gustava+Melins+gata+2,+Trollh%C3%A4ttan&output=embed"
+allowfullscreen
+loading="lazy">
+</iframe>
+</div>
+
+</div>
+
+<div class="hotel-pics-title">Pictures of the Hotel</div>
+
+<div class="hotel-slider">
+<div class="slider-arrow">◀</div>
+<div class="slider-img"></div>
+<div class="slider-arrow">▶</div>
+</div>
+
+</section>
+
+<footer class="footer-bar">
+<div class="footer-col">
+<div class="footer-title">Contact Information</div>
+<p>📞 +46 520 123 456</p>
+<p>✉ info@hotelcalifornia.se</p>
+<p>🕒 Reception Open 24 Hours</p>
+<p>🌐 www.hotelcalifornia.se</p>
+</div>
+
+<div class="footer-col">
+<div class="footer-title">Address</div>
+<p>
+Hotel California<br>
+Gustava Melins gata 2<br>
+461 32 Trollhättan
+</p>
+</div>
+
+<div class="footer-col footer-right">
+<div class="footer-title">Copyright</div>
+<p>© 2026 Hotel California</p>
+</div>
+</footer>
+
+</main>
+</div>
 </body>
 </html>
