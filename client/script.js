@@ -5,7 +5,7 @@ const loginForm = document.getElementById('login-form');
 
 async function checkLoginStatus() {
     try {
-        const response = await fetch('${API_länk}/api/check-auth');
+        const response = await fetch(`${API_länk}/api/check-auth`);
         const data = await response.json();
 
         if (data.loggedIn) {
@@ -34,7 +34,7 @@ function updateNavForLoggedInUser(role) {
     if (role === 'admin') {
         const adminBtn = document.querySelector('.admin-hidden');
         if(adminBtn) {
-            adminBtn.computedStyleMap.display = 'block'; // Visa admin-knappen
+            adminBtn.style.display = 'block'; // Visa admin-knappen
             adminBtn.classList.remove('admin-hidden');
         }
     }
@@ -42,8 +42,12 @@ function updateNavForLoggedInUser(role) {
 
 async function logoutUser(e) {
     e.preventDefault();
-    await fetch('${API_länk}/api/logout', { method: 'POST' });
-    window.location.href = 'index.html'; // Omdirigera till startsidan
+    try {
+        await fetch(`${API_länk}/api/logout`, { method: 'POST' });
+        window.location.href = 'index.html'; // Omdirigera till startsidan
+    } catch (error) {
+        console.error('Fel vid utloggning:', error);
+    }
 }
 
 checkLoginStatus();
@@ -58,7 +62,7 @@ if (loginForm) {
         const password = passwordInput.value;
 
         try {
-            const response = await fetch('${API_länk}/api/login', {
+            const response = await fetch(`${API_länk}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
