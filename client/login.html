@@ -13,7 +13,6 @@
     <main class="main-box">
 
       <section class="top-area">
-
         <div class="logo">
           <div class="logo-mark" aria-label="California logo">
             <svg class="logo-svg" viewBox="0 0 220 140" role="img">
@@ -23,33 +22,18 @@
                   <stop offset="55%" stop-color="var(--sun-2)"/>
                   <stop offset="100%" stop-color="var(--sun-3)"/>
                 </radialGradient>
-
                 <linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
                   <stop offset="0%" stop-color="var(--wave-1)"/>
                   <stop offset="55%" stop-color="var(--wave-2)"/>
                   <stop offset="100%" stop-color="var(--wave-3)"/>
                 </linearGradient>
-
                 <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
                   <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.35)"/>
                 </filter>
               </defs>
-
               <circle cx="150" cy="58" r="44" fill="url(#sunGrad)" filter="url(#softShadow)"/>
-
-              <path d="M22 110
-                       C55 95, 85 98, 110 108
-                       C140 120, 170 120, 202 106
-                       L202 120
-                       C168 134, 136 136, 108 126
-                       C80 116, 52 114, 22 126 Z"
-                    fill="url(#waveGrad)" opacity="0.92" filter="url(#softShadow)"/>
-
-              <path d="M30 118
-                       C58 106, 86 108, 112 118
-                       C138 128, 166 128, 192 114"
-                    fill="none" stroke="var(--wave-highlight)" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
-
+              <path d="M22 110 C55 95, 85 98, 110 108 C140 120, 170 120, 202 106 L202 120 C168 134, 136 136, 108 126 C80 116, 52 114, 22 126 Z" fill="url(#waveGrad)" opacity="0.92" filter="url(#softShadow)"/>
+              <path d="M30 118 C58 106, 86 108, 112 118 C138 128, 166 128, 192 114" fill="none" stroke="var(--wave-highlight)" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
               <g fill="none" stroke="var(--ink)" stroke-linecap="round" stroke-linejoin="round" filter="url(#softShadow)">
                 <path d="M72 48 C62 66, 60 86, 64 110" stroke-width="8"/>
                 <path d="M66 66 h14" stroke-width="2" opacity="0.35"/>
@@ -63,13 +47,11 @@
               </g>
             </svg>
           </div>
-
           <div class="logo-text">
             <div class="logo-name">California</div>
             <div class="logo-divider"></div>
           </div>
         </div>
-
         <nav class="nav">
           <a class="nav-btn" href="index.html">Find a Room</a>
           <a class="nav-btn" href="hotel-info.html">Hotel Information</a>
@@ -88,25 +70,21 @@
       </section>
 
       <section class="login-box">
-        <div class="login-form">
+        <form class="login-form">
 
           <div class="login-left">
-            <label for="email">E-Mail:</label>
-            <input id="email" type="email" class="real-input">
+            <label for="username">Username:</label>
+            <input id="username" type="text" class="real-input" required>
 
             <label for="password">Password:</label>
-            <input id="password" type="password" class="real-input">
+            <input id="password" type="password" class="real-input" required>
           </div>
 
           <div class="login-right">
-            <label>Remember Me:</label>
-            <div class="remember-box">X</div>
-
-            <button class="search-btn" type="button">Log In</button>
+            <button class="search-btn" type="submit">Log In</button>
           </div>
 
-        </div>
-
+        </form>
         <a class="register-link" href="register.html">Not a user yet? Register Here</a>
       </section>
 
