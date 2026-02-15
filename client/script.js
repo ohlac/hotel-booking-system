@@ -91,7 +91,7 @@ if (roomsContainer) {
 
 async function getRooms() {
     try {
-        const response = await fetch(`${API_BASE}/api/rooms`);
+        const response = await fetch(`${API_länk}/api/rooms`);
         if (!response.ok) throw new Error('Kunde inte nå servern');
         
         const rooms = await response.json();
