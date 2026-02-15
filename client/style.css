@@ -599,10 +599,15 @@ html, body {
 /* Admin Page */
 
 .admin-layout{
-  display: flex;
-  gap: 26px;
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 24px;
   flex: 1;
-  align-items: flex-start;
+
+  padding: 40px 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .admin-side{
