@@ -1,11 +1,12 @@
 const API_länk = 'https://hotel-api-67w7.onrender.com';
 
 const roomsContainer = document.getElementById('rooms-container');
-const loginForm = document.getElementById('login-form');
+const loginForm = document.querySelector('.login-form'); 
 
 async function checkLoginStatus() {
     try {
-        const response = await fetch(`${API_länk}/api/check-auth`);
+        // Skickar med cookies för att se vem som är inloggad
+        const response = await fetch(`${API_länk}/api/check-auth`, { credentials: 'include' });
         const data = await response.json();
 
         if (data.loggedIn) {
@@ -13,8 +14,9 @@ async function checkLoginStatus() {
             updateNavForLoggedInUser(data.user.role);
         }
 
+        // Skydda user-sidan om man inte är inloggad
         if (window.location.pathname.includes('user.html') && !data.loggedIn) {
-            window.location.href = 'login.html'; // Omdirigera till login-sidan om inte inloggad
+            window.location.href = 'login.html';
         }
     } catch (error) {
         console.error('Kunde inte kolla inloggningsstatus:', error);
@@ -22,7 +24,7 @@ async function checkLoginStatus() {
 }
 
 function updateNavForLoggedInUser(role) {
-    // Ändra "Log In" till "Log Out"
+    // Ändra Log In till Log Out
     const loginBtn = document.querySelector('a[href="login.html"]');
     if (loginBtn) {
         loginBtn.textContent = "Log Out";
@@ -34,7 +36,7 @@ function updateNavForLoggedInUser(role) {
     if (role === 'admin') {
         const adminBtn = document.querySelector('.admin-hidden');
         if(adminBtn) {
-            adminBtn.style.display = 'block'; // Visa admin-knappen
+            adminBtn.style.display = 'block';
             adminBtn.classList.remove('admin-hidden');
         }
     }
@@ -43,8 +45,9 @@ function updateNavForLoggedInUser(role) {
 async function logoutUser(e) {
     e.preventDefault();
     try {
-        await fetch(`${API_länk}/api/logout`, { method: 'POST' });
-        window.location.href = 'index.html'; // Omdirigera till startsidan
+        // Logga ut och rensa sessionen
+        await fetch(`${API_länk}/api/logout`, { method: 'POST', credentials: 'include' });
+        window.location.href = 'index.html'; 
     } catch (error) {
         console.error('Fel vid utloggning:', error);
     }
@@ -55,16 +58,20 @@ checkLoginStatus();
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const usernameInput = document.querySelector('input[type="text"]');
-        const passwordInput = document.querySelector('input[type="password"]');
+        
+        // Hitta inputs i formuläret
+        const usernameInput = loginForm.querySelector('input[type="text"]');
+        const passwordInput = loginForm.querySelector('input[type="password"]');
 
         const username = usernameInput.value;
         const password = passwordInput.value;
 
         try {
+            // Skicka inloggning till servern
             const response = await fetch(`${API_länk}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', // Viktigt för att spara kakan
                 body: JSON.stringify({ username, password })
             });
 
@@ -73,9 +80,9 @@ if (loginForm) {
             if (result.loggedIn) {
                 alert('Login successful!');
                 if (result.role === 'admin') {
-                    window.location.href = 'admin.html'; // Skicka admin till admin-sidan
+                    window.location.href = 'admin.html';
                 } else {
-                    window.location.href = 'index.html'; // Skicka vanlig user till startsidan
+                    window.location.href = 'user.html'; // Skicka till user page
                 }
             } else {
                 alert("Login failed: " + result.message);
@@ -86,7 +93,6 @@ if (loginForm) {
         }
     });
 }
-
 
 
 if (roomsContainer) {
@@ -115,7 +121,9 @@ async function getRooms() {
                     <p class="room-desc" style="font-weight: bold;">Price: ${room.price_per_night} kr/night</p>
                     <button class="search-btn" onclick="alert('Booking coming soon!')">Book</button>
                 </div>
-                <div class="img-placeholder">Bild: ${room.type}</div>
+                <div class="img-placeholder" style="background:#ddd; height:120px; display:flex; justify-content:center; align-items:center; border-radius:8px;">
+                    ${room.type}
+                </div>
             `;
             roomsContainer.appendChild(roomCard);
         });

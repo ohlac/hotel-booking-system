@@ -6,8 +6,15 @@ const session = require('express-session');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // frontend prata med backend
-app.use(cors());
+app.use(cors({
+    origin: 'https://hotel-frontend-vi9g.onrender.com',
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
+
 app.use(express.json()); // för att kunna läsa JSON-data
 
 app.use(session({
@@ -15,9 +22,9 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: false,
-        httpOnly: true,
-        maxAge: 1000 * 60 * 30 // Sista siffran är minuter som användaren är inloggad. 30 min nu.
+        secure: true,
+        sameSite: 'none',
+        maxAge: 1000 * 60 * 60 // Sista siffran är minuter som användaren är inloggad. 60 min nu.
     }
 }));
 
