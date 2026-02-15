@@ -82,7 +82,11 @@ app.post('/api/login', async (req, res) => {
                 username: user.username,
                 role: user.role //admin eller user
             };
-            res.json({ loggedIn: true, role: user.role });
+            req.session.save((err) => {
+                if (err) return res.status(500).json({ error: 'Kunde inte spara session' });
+                res.json({ loggedIn: true, role: user.role });
+            }); 
+            
         } else {
             res.status(401).json({ loggedIn: false, message: 'Felaktigt användarnamn eller lösenord' });
         }
