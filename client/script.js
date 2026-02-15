@@ -12,11 +12,22 @@ async function checkLoginStatus() {
         if (data.loggedIn) {
             console.log('Användare är inloggad som:', data.user.role);
             updateNavForLoggedInUser(data.user.role);
+
+            const welcomeText = document.querySelector('user-welcome');
+            if (welcomeText) welcomeText.textContent = `Welcome back, ${data.user.username}!`;       
         }
 
         // Skydda user-sidan om man inte är inloggad
         if (window.location.pathname.includes('user.html') && !data.loggedIn) {
             window.location.href = 'login.html';
+        }
+
+        // Skydda admin
+        if (window.location.pathname.includes('admin.html')) {
+            if (!data.loggedIn || data.user.role !== 'admin') {
+                console.warn('Åtkomst nekad: Ej admin');
+                window.location.href = 'index.html';
+            }
         }
     } catch (error) {
         console.error('Kunde inte kolla inloggningsstatus:', error);
