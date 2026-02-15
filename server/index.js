@@ -12,7 +12,8 @@ app.set('trust proxy', 1);
 app.use(cors({
     origin: 'https://hotel-frontend-vi9g.onrender.com',
     methods: ['GET', 'POST'],
-    credentials: true
+    credentials: true,
+    exposedHeaders: ['set-cookie']
 }));
 
 app.use(express.json()); // för att kunna läsa JSON-data
