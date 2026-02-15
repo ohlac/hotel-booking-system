@@ -18,12 +18,15 @@ app.use(cors({
 app.use(express.json()); // för att kunna läsa JSON-data
 
 app.use(session({
+    name: 'hotel_session', // namnet på cookie som lagrar sessionen
     secret: 'hemligthotel0', // lösenord för sessionen.
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
+    proxy: true,
     cookie: { 
         secure: true,
         sameSite: 'none',
+        httpOnly: true,
         maxAge: 1000 * 60 * 60 // Sista siffran är minuter som användaren är inloggad. 60 min nu.
     }
 }));
@@ -108,6 +111,7 @@ app.get('/api/check-auth', (req, res) => {
 // Logga ut
 app.post('/api/logout', (req, res) => {
     req.session.destroy(() => {
+        res.clearCookie('hotel_session'); // Rensa cookie
         res.json({ loggedIn: false });
     });
 });
