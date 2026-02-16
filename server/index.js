@@ -10,13 +10,19 @@ app.set('trust proxy', 1);
 
 // frontend prata med backend
 app.use(cors({
-    origin: 'https://hotel-frontend-vi9g.onrender.com',
+    origin: [
+        'https://hotel-frontend-vi9g.onrender.com',
+        'http://127.0.0.1:5500',
+        'http://localhost:5500'
+    ],
     methods: ['GET', 'POST'],
     credentials: true,
     exposedHeaders: ['set-cookie']
 }));
 
 app.use(express.json()); // för att kunna läsa JSON-data
+
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER;
 
 app.use(session({
     name: 'hotel_session', // namnet på cookie som lagrar sessionen
@@ -25,8 +31,8 @@ app.use(session({
     saveUninitialized: true,
     proxy: true,
     cookie: { 
-        secure: true,
-        sameSite: 'none',
+        secure: isProduction ? true : false, // Endast över HTTPS i produktion
+        sameSite: isProduction ? 'none' : 'lax', // 'none' i produktion för att tillåta cross-site cookies
         httpOnly: true,
         maxAge: 1000 * 60 * 60 // Sista siffran är minuter som användaren är inloggad. 60 min nu.
     }
