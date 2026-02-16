@@ -62,3 +62,56 @@ async function getRooms() {
 
 // Kör funktionen direkt när sidan laddas
 getRooms();
+// hotel slider
+document.addEventListener("DOMContentLoaded", () => {
+  const images = [
+    "images/1.jpg","images/2.jpg","images/3.jpg","images/4.jpg","images/5.jpg",
+    "images/6.jpg","images/7.jpg","images/8.jpg","images/9.jpg","images/10.jpg",
+    "images/11.jpg","images/12.jpg","images/13.jpg","images/14.jpg","images/15.jpg",
+    "images/16.jpg","images/17.jpg","images/18.jpg","images/19.jpg","images/20.jpg",
+    "images/21.jpg","images/22.jpg","images/23.jpg"
+  ];
+
+  let current = 0;
+
+  const slider = document.getElementById("sliderImg");
+  const leftBtn = document.querySelector(".slider-arrow.left");
+  const rightBtn = document.querySelector(".slider-arrow.right");
+
+  const modal = document.getElementById("imgModal");
+  const modalImg = document.getElementById("imgModalContent");
+  const closeBtn = document.querySelector(".img-close");
+
+  if (!slider || !leftBtn || !rightBtn) return;
+
+  function showImage(i) {
+    slider.style.backgroundImage = `url("${images[i]}")`;
+  }
+
+  leftBtn.addEventListener("click", () => {
+    current = (current - 1 + images.length) % images.length;
+    showImage(current);
+  });
+
+  rightBtn.addEventListener("click", () => {
+    current = (current + 1) % images.length;
+    showImage(current);
+  });
+
+  showImage(current);
+
+  if (modal && modalImg && closeBtn) {
+    slider.addEventListener("click", () => {
+      modal.style.display = "flex";
+      modalImg.src = images[current];
+    });
+
+    closeBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.style.display = "none";
+    });
+  }
+});

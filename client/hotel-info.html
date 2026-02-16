@@ -83,8 +83,9 @@ fill="url(#waveGrad)" opacity="0.92" filter="url(#softShadow)"/>
 <div class="hotel-desc">
 <div class="hotel-subtitle">Description</div>
 <p>
-This hotel is perfect for travellers looking for a cozy place to stay the night!
-We offer free breakfast for all guests.
+Experience comfort and elegance at Hotel California, a welcoming retreat in the heart of Trollhättan.
+Our thoughtfully designed rooms combine modern comfort with a warm atmosphere, creating the perfect place to relax after a long day.
+Guests enjoy complimentary breakfast each morning along with attentive service throughout their stay.
 </p>
 </div>
 
@@ -95,7 +96,8 @@ We offer free breakfast for all guests.
 <p>
 Hotel California<br>
 Gustava Melins gata 2<br>
-461 32 Trollhättan
+461 32 Trollhättan<br>
+Sweden
 </p>
 </div>
 
@@ -111,10 +113,11 @@ loading="lazy">
 
 <div class="hotel-pics-title">Pictures of the Hotel</div>
 
+
 <div class="hotel-slider">
-<div class="slider-arrow">◀</div>
-<div class="slider-img"></div>
-<div class="slider-arrow">▶</div>
+<div class="slider-arrow left">◀</div>
+<div class="slider-img" id="sliderImg" role="button" tabindex="0"></div>
+<div class="slider-arrow right">▶</div>
 </div>
 
 </section>
@@ -133,7 +136,8 @@ loading="lazy">
 <p>
 Hotel California<br>
 Gustava Melins gata 2<br>
-461 32 Trollhättan
+461 32 Trollhättan<br>
+Sweden
 </p>
 </div>
 
@@ -145,5 +149,11 @@ Gustava Melins gata 2<br>
 
 </main>
 </div>
+<div id="imgModal" class="img-modal">
+  <span class="img-close">&times;</span>
+  <img class="img-modal-content" id="imgModalContent">
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
