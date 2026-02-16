@@ -147,6 +147,7 @@ async function getRooms() {
 
 // Kör funktionen direkt när sidan laddas
 getRooms();
+
 // hotel slider
 document.addEventListener("DOMContentLoaded", () => {
   const images = [
@@ -158,46 +159,41 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   let current = 0;
-
   const slider = document.getElementById("sliderImg");
   const leftBtn = document.querySelector(".slider-arrow.left");
   const rightBtn = document.querySelector(".slider-arrow.right");
-
   const modal = document.getElementById("imgModal");
   const modalImg = document.getElementById("imgModalContent");
   const closeBtn = document.querySelector(".img-close");
-
-  if (!slider || !leftBtn || !rightBtn) return;
-
-  function showImage(i) {
+  const modalLeft = document.querySelector(".modal-arrow.left");
+  const modalRight = document.querySelector(".modal-arrow.right");
+  function showImage(i){
     slider.style.backgroundImage = `url("${images[i]}")`;
   }
-
-  leftBtn.addEventListener("click", () => {
+  function showModal(i){
+    modal.style.display = "flex";
+    modalImg.src = images[i];
+  }
+  leftBtn.onclick = () => {
     current = (current - 1 + images.length) % images.length;
     showImage(current);
-  });
-
-  rightBtn.addEventListener("click", () => {
+  };
+  rightBtn.onclick = () => {
     current = (current + 1) % images.length;
     showImage(current);
-  });
-
+  };
+  slider.onclick = () => {
+    showModal(current);
+  };
+  modalLeft.onclick = () => {
+    current = (current - 1 + images.length) % images.length;
+    modalImg.src = images[current];
+  };
+  modalRight.onclick = () => {
+    current = (current + 1) % images.length;
+    modalImg.src = images[current];
+  };
+  closeBtn.onclick = () => modal.style.display = "none";
+  modal.onclick = (e) => { if(e.target === modal) modal.style.display="none"; };
   showImage(current);
-
-  if (modal && modalImg && closeBtn) {
-    slider.addEventListener("click", () => {
-      modal.style.display = "flex";
-      modalImg.src = images[current];
-    });
-
-    closeBtn.addEventListener("click", () => {
-      modal.style.display = "none";
-    });
-
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) modal.style.display = "none";
-    });
-  }
 });
-
