@@ -123,6 +123,12 @@ async function getRooms() {
             if (room.type === 'Double') imagePath = 'images/double.jpg';
             if (room.type === 'Suite') imagePath = 'images/suite.jpg';
 
+            let capacity = 1;
+            if (room.typ ==="Double") capacity = 3;
+            if (room.typ ==="Double") capacity = 5;
+            roomCard.dataset.capacity = capacity;
+
+
             const roomCard = document.createElement('article');
             roomCard.classList.add('room-card');
             roomCard.innerHTML = `
@@ -130,7 +136,10 @@ async function getRooms() {
                     <h3 class="room-title">Room ${room.room_number} - ${room.type}</h3>
                     <p class="room-desc">${room.description}</p>
                     <p class="room-desc" style="font-weight: bold;">Price: ${room.price_per_night} kr/night</p>
+                    <p class="room-capacity">Max ${capacity} guests</p>
+
                     <button class="search-btn" onclick="alert('Booking coming soon!')">Book</button>
+                
                 </div>
                 <div class="img-placeholder" style="background:#ddd; height:120px; display:flex; justify-content:center; align-items:center; border-radius:8px;">
                     ${room.type}
@@ -197,3 +206,53 @@ document.addEventListener("DOMContentLoaded", () => {
   modal.onclick = (e) => { if(e.target === modal) modal.style.display="none"; };
   showImage(current);
 });
+
+
+  let adults = 1;
+  let children = 0;
+
+  function toggleGuests(){
+    const box = document.getElementById("guests-dropdown");
+    box.style.display = box.style.display === "block" ? "none" : "block";
+  }
+
+  function changeAdults(val){
+    adults = Math.max(1, adults + val);
+    updateGuests();
+  }
+
+  function changeChildren(val){
+    children = Math.max(0, children + val);
+    updateGuests();
+  }
+
+  function updateGuests(){
+    document.getElementById("adults-count").textContent = adults;
+    document.getElementById("children-count").textContent = children;
+
+    let text = adults + " Adult";
+    if(adults > 1) text += "s";
+
+    if(children > 0){
+      text += ", " + children + " Child";
+      if(children > 1) text += "ren";
+    }
+
+    document.getElementById("guests-text").textContent = text;
+  }
+  function filterRoomsByGuests(){
+  const totalGuests = adults + children;
+  const cards = document.querySelectorAll(".room-card");
+
+  cards.forEach(card => {
+    const capacity = parseInt(card.dataset.capacity || "0", 10);
+    card.style.display = capacity >= totalGuests ? "" : "none";
+  });
+}
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("searchBtn");
+  if(btn){
+    btn.addEventListener("click", filterRoomsByGuests);
+  }
+});
+
