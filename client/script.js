@@ -1,122 +1,121 @@
+// API-adress till backend
 const API_länk = 'https://hotel-api-67w7.onrender.com';
 
+// HTML-element
 const roomsContainer = document.getElementById('rooms-container');
-const loginForm = document.querySelector('.login-form'); 
+const loginForm = document.querySelector('.login-form');
 
+// Kontrollera om användare är inloggad
 async function checkLoginStatus() {
-    try {
-        // Skickar med cookies för att se vem som är inloggad
-        const response = await fetch(`${API_länk}/api/check-auth`, { credentials: 'include' });
-        const data = await response.json();
+  try {
+    const response = await fetch(`${API_länk}/api/check-auth`, {
+      credentials: 'include'
+    });
 
-        if (data.loggedIn) {
-            console.log('Användare är inloggad som:', data.user.role);
-            updateNavForLoggedInUser(data.user.role);
+    const data = await response.json();
 
-            const welcomeText = document.querySelector('user-welcome');
-            if (welcomeText) welcomeText.textContent = `Welcome back, ${data.user.username}!`;       
-        }
+    if (data.loggedIn) {
+      updateNavForLoggedInUser(data.user.role);
 
-        // Skydda user-sidan om man inte är inloggad
-        if (window.location.pathname.includes('user.html') && !data.loggedIn) {
-            window.location.href = 'login.html';
-        }
-
-        // Skydda admin
-        if (window.location.pathname.includes('admin.html')) {
-            if (!data.loggedIn || data.user.role !== 'admin') {
-                console.warn('Åtkomst nekad: Ej admin');
-                window.location.href = 'index.html';
-            }
-        }
-    } catch (error) {
-        console.error('Kunde inte kolla inloggningsstatus:', error);
+      const welcomeText = document.querySelector('#user-welcome');
+      if (welcomeText) {
+        welcomeText.textContent = `Welcome back, ${data.user.username}!`;
+      }
     }
+
+    if (window.location.pathname.includes('user.html') && !data.loggedIn) {
+      window.location.href = 'login.html';
+    }
+
+    if (window.location.pathname.includes('admin.html')) {
+      if (!data.loggedIn || data.user.role !== 'admin') {
+        window.location.href = 'index.html';
+      }
+    }
+
+  } catch (error) {
+    console.error('Fel vid kontroll av login:', error);
+  }
 }
 
+// Uppdatera navigation när inloggad
 function updateNavForLoggedInUser(role) {
-    // Ändra Log In till Log Out
-    const loginBtn = document.querySelector('a[href="login.html"]');
-    if (loginBtn) {
-        loginBtn.textContent = "Log Out";
-        loginBtn.href = "#";
-        loginBtn.addEventListener('click', logoutUser);
-    }
+  const loginBtn = document.querySelector('a[href="login.html"]');
 
-    // Visa admin-knappen om användaren är admin
-    if (role === 'admin') {
-        const adminBtn = document.querySelector('.admin-hidden');
-        if(adminBtn) {
-            adminBtn.style.display = 'block';
-            adminBtn.classList.remove('admin-hidden');
-        }
+  if (loginBtn) {
+    loginBtn.textContent = "Log Out";
+    loginBtn.href = "#";
+    loginBtn.addEventListener('click', logoutUser);
+  }
+
+  if (role === 'admin') {
+    const adminBtn = document.querySelector('.admin-hidden');
+    if (adminBtn) {
+      adminBtn.style.display = 'block';
+      adminBtn.classList.remove('admin-hidden');
     }
+  }
 }
 
+// Logga ut användare
 async function logoutUser(e) {
-    e.preventDefault();
-    try {
-        // Logga ut och rensa sessionen
-        await fetch(`${API_länk}/api/logout`, { method: 'POST', credentials: 'include' });
-        window.location.href = 'index.html'; 
-    } catch (error) {
-        console.error('Fel vid utloggning:', error);
-    }
+  e.preventDefault();
+  try {
+    await fetch(`${API_länk}/api/logout`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    window.location.href = 'index.html';
+  } catch (error) {
+    console.error('Logout-fel:', error);
+  }
 }
 
 checkLoginStatus();
 
+// Login-formulär
 if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // Hitta inputs i formuläret
-        const usernameInput = loginForm.querySelector('input[type="text"]');
-        const passwordInput = loginForm.querySelector('input[type="password"]');
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-        const username = usernameInput.value;
-        const password = passwordInput.value;
+    const username = loginForm.querySelector('input[type="text"]').value;
+    const password = loginForm.querySelector('input[type="password"]').value;
 
-        try {
-            // Skicka inloggning till servern
-            const response = await fetch(`${API_länk}/api/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include', // Viktigt för att spara kakan
-                body: JSON.stringify({ username, password })
-            });
+    try {
+      const response = await fetch(`${API_länk}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username, password })
+      });
 
-            const result = await response.json();
+      const result = await response.json();
 
-            if (result.loggedIn) {
-                alert('Login successful!');
-                if (result.role === 'admin') {
-                    window.location.href = 'admin.html';
-                } else {
-                    window.location.href = 'user.html'; // Skicka till user page
-                }
-            } else {
-                alert("Login failed: " + result.message);
-            }
-        } catch (error) {
-            console.error('Login error: ', error);
-            alert('An error occurred while trying to log in.');
+      if (result.loggedIn) {
+        if (result.role === 'admin') {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'user.html';
         }
-    });
+      } else {
+        alert("Login failed: " + result.message);
+      }
+
+    } catch (error) {
+      console.error('Login-fel:', error);
+    }
+  });
 }
 
-
+// Hämta rum från backend
 if (roomsContainer) {
-    getRooms();
+  getRooms();
 }
 
 async function getRooms() {
-    try {
-        const response = await fetch(`${API_länk}/api/rooms`);
-        if (!response.ok) throw new Error('Kunde inte nå servern');
-        
-        const rooms = await response.json();
-        roomsContainer.innerHTML = '';
+  try {
+    const response = await fetch(`${API_länk}/api/rooms`);
+    if (!response.ok) throw new Error('Servern svarar inte');
 
         rooms.forEach(room => {
             let imagePath = 'single.jpg'; // Default bild
