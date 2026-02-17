@@ -119,12 +119,13 @@ async function getRooms() {
         roomsContainer.innerHTML = '';
 
         rooms.forEach(room => {
-            let imagePath = 'images/single.jpg'; // Default bild
-            if (room.type === 'Double') imagePath = 'images/double.jpg';
-            if (room.type === 'Suite') imagePath = 'images/suite.jpg';
+            let imagePath = 'single.jpg'; // Default bild
+            if (room.type === 'Double') imagePath = 'double.jpg';
+            if (room.type === 'Suite') imagePath = 'suite.jpg';
 
             const roomCard = document.createElement('article');
             roomCard.classList.add('room-card');
+
             roomCard.innerHTML = `
                  <div class="room-text">
                     <h3 class="room-title">Room ${room.room_number} - ${room.type}</h3>
@@ -132,8 +133,8 @@ async function getRooms() {
                     <p class="room-desc" style="font-weight: bold;">Price: ${room.price_per_night} kr/night</p>
                     <button class="search-btn" onclick="alert('Booking coming soon!')">Book</button>
                 </div>
-                <div class="img-placeholder" style="background:#ddd; height:120px; display:flex; justify-content:center; align-items:center; border-radius:8px;">
-                    ${room.type}
+                <div class="room-image-container">
+                    <img src="images/rooms/${imagePath}" alt="${room.type} room" class="room-image">
                 </div>
             `;
             roomsContainer.appendChild(roomCard);
@@ -143,4 +144,47 @@ async function getRooms() {
         console.error('Fel:', error);
         roomsContainer.innerHTML = `<p style="text-align:center; color:red;">Kunde inte hämta rum.</p>`;
     }
+}
+
+
+
+// Bildslider på hotel-info.html
+const sliderImg = document.querySelector('.slider-img');
+
+if (sliderImg) {
+    const images = [
+        'images/hotel/1.jpg',
+        'images/hotel/2.jpg',
+        'images/hotel/3.jpg',
+        'images/hotel/4.jpg',
+        'images/hotel/5.jpg',
+        'images/hotel/6.jpg',
+        'images/hotel/7.jpg'
+    ];
+
+    let currentImageIndex = 0;
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function showImage() {
+        sliderImg.style.backgroundImage = `url(${images[currentImageIndex]})`;
+    }
+
+    // Klicka på vänsterpil
+    prevBtn.addEventListener('click', () => {
+        currentImageIndex --;
+        if (currentImageIndex < 0) currentImageIndex = images.length - 1;
+        showImage();
+    });
+
+    //Klicka på högerpil
+    nextBtn.addEventListener('click', () => {
+        currentImageIndex ++;
+        if (currentImageIndex >= images.length) currentImageIndex = 0;
+        showImage();
+    });
+
+    // Visa första bilden direkt
+    showImage();
+
 }
