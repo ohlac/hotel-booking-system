@@ -117,6 +117,10 @@ async function getRooms() {
     const response = await fetch(`${API_länk}/api/rooms`);
     if (!response.ok) throw new Error('Servern svarar inte');
 
+    const rooms = await response.json();
+
+    roomsContainer.innerHTML = '';
+
         rooms.forEach(room => {
             let imagePath = 'single.jpg'; // Default bild
             if (room.type === 'Double') imagePath = 'double.jpg';
