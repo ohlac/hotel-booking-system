@@ -58,17 +58,18 @@
         </div>
 
         <nav class="nav">
-          <a class="nav-btn" href="index.html">Find a Room</a>
-          <a class="nav-btn" href="hotel-info.html">Hotel Information</a>
-          <a class="nav-btn" href="user.html">User Page / Bookings</a>
-          <a class="nav-btn active" href="login.html">Log In</a>
-          <a class="nav-btn admin-hidden" href="admin.html">Admin</a>
+          <a class="nav-btn active" href="index.html" data-i18n="navFind">Find a Room</a>
+          <a class="nav-btn" href="hotel-info.html" data-i18n="navInfo">Hotel Information</a>
+          <a class="nav-btn" href="user.html" data-i18n="navUser">User Page / Bookings</a>
+          <a class="nav-btn" href="login.html" data-i18n="navLogin">Log In</a>
+          <a class="nav-btn admin-hidden" href="admin.html" data-i18n="navAdmin">Admin</a>
+          <a class="nav-btn" href="#" id="langBtn">EN | SV</a>
         </nav>
 
       </section>
 
       <section class="login-info">
-        <p>
+        <p data-i18n="registerInfo">
           Register to manage your room bookings and adjust user settings:<br>
           (Or to see admin page for admins)
         </p>
@@ -78,24 +79,24 @@
         <div class="login-form">
 
           <div class="login-left">
-            <label>E-Mail:</label>
+            <label data-i18n="email">E-Mail:</label>
             <input type="email" class="real-input">
 
-            <label>Username:</label>
+            <label data-i18n="username">Username:</label>
             <input type="text" class="real-input">
 
-            <label>Full Name:</label>
+            <label data-i18n="fullName">Full Name:</label>
             <input type="text" class="real-input">
 
-            <label>Password:</label>
+            <label data-i18n="password">Password:</label>
             <input type="password" class="real-input">
 
-            <label>Repeat Password:</label>
+            <label data-i18n="repeatPassword">Repeat Password:</label>
             <input type="password" class="real-input">
           </div>
 
           <div class="login-right">
-            <button class="search-btn">Register</button>
+            <button class="search-btn" data-i18n="registerBtn">Register</button>
           </div>
 
         </div>

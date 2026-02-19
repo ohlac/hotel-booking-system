@@ -72,11 +72,12 @@
         </div>
 
         <nav class="nav">
-          <a class="nav-btn" href="index.html">Find a Room</a>
-          <a class="nav-btn" href="hotel-info.html">Hotel Information</a>
-          <a class="nav-btn" href="user.html">User Page / Bookings</a>
-          <a class="nav-btn" href="login.html">Log In</a>
-          <a class="nav-btn active" href="admin.html">Admin</a>
+          <a class="nav-btn active" href="index.html" data-i18n="navFind">Find a Room</a>
+          <a class="nav-btn" href="hotel-info.html" data-i18n="navInfo">Hotel Information</a>
+          <a class="nav-btn" href="user.html" data-i18n="navUser">User Page / Bookings</a>
+          <a class="nav-btn" href="login.html" data-i18n="navLogin">Log In</a>
+          <a class="nav-btn admin-hidden" href="admin.html" data-i18n="navAdmin">Admin</a>
+          <a class="nav-btn" href="#" id="langBtn">EN | SV</a>
         </nav>
 
       </section>
@@ -84,25 +85,25 @@
       <section class="admin-layout">
 
         <aside class="admin-side">
-          <a class="admin-side-btn active" href="#">Current Bookings</a>
-          <a class="admin-side-btn" href="#">Manage Rooms</a>
+          <a class="admin-side-btn active" href="#" data-i18n="adminCurrentBookings">Current Bookings</a>
+          <a class="admin-side-btn" href="#" data-i18n="adminMangeRooms">Manage Rooms</a>
         </aside>
 
         <section class="admin-content">
 
           <div class="admin-stats">
             <div class="admin-stat-box">
-              <div class="admin-stat-title">Total Current Bookings</div>
+              <div class="admin-stat-title" data-i18n="adminTotalBookings">Total Current Bookings</div>
               <div class="admin-stat-value">2</div>
             </div>
 
             <div class="admin-stat-box">
-              <div class="admin-stat-title">Available Rooms</div>
+              <div class="admin-stat-title" data-i18n="adminAvailableRooms">Available Rooms</div>
               <div class="admin-stat-value">13</div>
             </div>
           </div>
 
-          <div class="admin-section-title">Current Bookings</div>
+          <div class="admin-section-title" data-i18n="adminCurrentBookingsTitle">Current Bookings</div>
 
           <div class="admin-cards">
 
@@ -114,12 +115,12 @@
               </div>
 
               <div class="admin-booked-info">
-                <div class="admin-booked-title">Booked for:</div>
+                <div class="admin-booked-title" data-i18n="adminBookedFor">Booked for:</div>
                 <div>Start Date: 2026-04-11</div>
                 <div>End Date: 2026-04-12</div>
               </div>
 
-              <div class="admin-img-box">Image</div>
+              <div class="admin-img-box" data-i18n="imgText">Image</div>
             </article>
 
             <article class="admin-booking-card">

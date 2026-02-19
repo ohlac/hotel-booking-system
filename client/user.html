@@ -59,11 +59,12 @@
         </div>
 
         <nav class="nav">
-          <a class="nav-btn" href="index.html">Find a Room</a>
-          <a class="nav-btn" href="hotel-info.html">Hotel Information</a>
-          <a class="nav-btn active" href="user.html">User Page / Bookings</a>
-          <a class="nav-btn" href="login.html">Log In</a>
-          <a class="nav-btn admin-hidden" href="admin.html">Admin</a>
+          <a class="nav-btn active" href="index.html" data-i18n="navFind">Find a Room</a>
+          <a class="nav-btn" href="hotel-info.html" data-i18n="navInfo">Hotel Information</a>
+          <a class="nav-btn" href="user.html" data-i18n="navUser">User Page / Bookings</a>
+          <a class="nav-btn" href="login.html" data-i18n="navLogin">Log In</a>
+          <a class="nav-btn admin-hidden" href="admin.html" data-i18n="navAdmin">Admin</a>
+          <a class="nav-btn" href="#" id="langBtn">EN | SV</a>s
         </nav>
 
       </section>
@@ -71,31 +72,33 @@
       <section class="user-layout">
 
         <aside class="user-side">
-          <a class="active" href="#">My Bookings</a>
-          <a href="#">User Settings</a>
+          <a class="active" href="#" data-i18n="userMyBookings">My Bookings</a>
+          <a href="#" data-i18n="userSettings">User Settings</a>
+
         </aside>
 
         <div class="page-white">
           <section class="user-main">
+            
+            <div class="user-welcome" data-i18n="userWelcome">Welcome back, [User]!</div>
+            <div class="user-title" data-i18n="userBookingsTitle">Your Bookings:</div>
 
-            <div class="user-welcome">Welcome back, [User]!</div>
-            <div class="user-title">Your Bookings:</div>
 
             <article class="user-booking-card">
 
               <div class="user-lines">
                 <div class="line-title">Room 104</div>
-                <div class="line">Room Type: Single</div>
-                <div class="line">Start Date: 2026-04-11</div>
+                <div class="line" data-i18n="roomTypeLine">Room Type: Single</div>
+                <div class="line" data-i18n="startDateLine">Start Date: 2026-04-11</div>
                 <div class="booked">Booked for: [User]</div>
               </div>
 
               <div class="user-dates">
-                <div class="end-date">End Date: 2026-04-12</div>
+                <div class="end-date" data-i18n="endDateLine">End Date: 2026-04-12</div>
                 <button class="cancel-btn">Cancel Booking</button>
               </div>
 
-              <div class="user-img">Image</div>
+              <div class="user-img" data-i18n="imgText">Image</div>
 
             </article>
 

@@ -72,27 +72,31 @@
         </div>
 
         <nav class="nav">
-          <a class="nav-btn" href="index.html">Find a Room</a>
-          <a class="nav-btn" href="hotel-info.html">Hotel Information</a>
-          <a class="nav-btn" href="user.html">User Page / Bookings</a>
-          <a class="nav-btn" href="login.html">Log In</a>
-          <a class="nav-btn admin-hidden" href="admin.html">Admin</a>
+          <a class="nav-btn active" href="index.html" data-i18n="navFind">Find a Room</a>
+          <a class="nav-btn" href="hotel-info.html" data-i18n="navInfo">Hotel Information</a>
+          <a class="nav-btn" href="user.html" data-i18n="navUser">User Page / Bookings</a>
+          <a class="nav-btn" href="login.html" data-i18n="navLogin">Log In</a>
+          <a class="nav-btn admin-hidden" href="admin.html" data-i18n="navAdmin">Admin</a>
+          <a class="nav-btn" href="#" id="langBtn">EN | SV</a>
         </nav>
 
       </section>
 
       <section class="booking-center">
         <div class="confirmation-box">
-          <h2 class="confirm-title">Booking Confirmed ✓</h2>
+          <h2 class="confirm-title" data-i18n="bookingConfirmed">
+            Booking Confirmed ✓
+          </h2>
 
-          <p>
+          <p data-i18n="bookingThanks">
             Thank you for booking a room with us, <strong>[User]</strong>!<br>
             Your booking ID is <strong>#000</strong>
           </p>
 
-          <p class="confirm-date">
+          <p class="confirm-date" data-i18n="bookingSeeYou">
             We will see you on <strong>[Start Date]</strong>!
           </p>
+
         </div>
       </section>
 

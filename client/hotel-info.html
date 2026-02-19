@@ -67,36 +67,51 @@
         </div>
         
         <nav class="nav">
-          <a class="nav-btn" href="index.html">Find a Room</a>
-          <a class="nav-btn active" href="hotel-info.html">Hotel Information</a>
-          <a class="nav-btn" href="user.html">User Page / Bookings</a>
-          <a class="nav-btn" href="login.html">Log In</a>
-          <a class="nav-btn admin-hidden" href="admin.html">Admin</a>
+          <a class="nav-btn active" href="index.html" data-i18n="navFind">Find a Room</a>
+          <a class="nav-btn" href="hotel-info.html" data-i18n="navInfo">Hotel Information</a>
+          <a class="nav-btn" href="user.html" data-i18n="navUser">User Page / Bookings</a>
+          <a class="nav-btn" href="login.html" data-i18n="navLogin">Log In</a>
+          <a class="nav-btn admin-hidden" href="admin.html" data-i18n="navAdmin">Admin</a>
+          <a class="nav-btn" href="#" id="langBtn">EN | SV</a>
         </nav>
         
       </section>
       
       <section class="hotel-info-page">
         
-        <h2 class="hotel-title">Hotel California</h2>
+        <h2 class="hotel-title" data-i18n="hotelTitle">Hotel California</h2>
         
         <div class="hotel-desc">
-          <div class="hotel-subtitle">Description</div>
+          <div class="hotel-subtitle" data-i18n="descTitle">Description</div>
           <p>
-            Experience comfort and elegance at Hotel California, a welcoming retreat in the heart of Trollhättan. <br>
-            Our thoughtfully designed rooms combine modern comfort with a warm atmosphere, creating the perfect place to relax after a long day. <br>
-            Guests enjoy complimentary breakfast each morning along with attentive service throughout their stay. <br>
-            Whether you're here for a romantic getaway or a family vacation, Hotel California has something for everyone.
-            <br><br><br>
-            If you have any questions, please don't hesitate to contact us! <br>
-            Contact information can be found at the bottom of the page.
-          </p>
+            <span data-i18n="hotelDesc1">
+              Experience comfort and elegance at Hotel California, a welcoming retreat in the heart of Trollhättan.
+            </span><br>
+            <span data-i18n="hotelDesc2">
+              Our thoughtfully designed rooms combine modern comfort with a warm atmosphere, creating the perfect place to relax after a long day.
+            </span><br>
+            <span data-i18n="hotelDesc3">
+               Guests enjoy complimentary breakfast each morning along with attentive service throughout their stay.
+              </span><br>
+              <span data-i18n="hotelDesc4">
+                Whether you're here for a romantic getaway or a family vacation, Hotel California has something for everyone.
+              </span><br><br>
+              
+              <span data-i18n="hotelDesc5">
+                If you have any questions, please don't hesitate to contact us!
+              </span><br>
+              
+              <span data-i18n="hotelDesc6">
+                Contact information can be found at the bottom of the page.
+              </span>
+            </p>
+
         </div>
         
         <div class="hotel-grid">
           
           <div class="hotel-address">
-            <div class="hotel-subtitle">Address</div>
+            <div class="hotel-subtitle" data-i18n="address">Address</div>
             <p>
               Hotel California<br>
               Gustava Melins gata 2<br>
@@ -114,7 +129,7 @@
         
       </div>
       
-      <div class="hotel-pics-title">Pictures of the Hotel</div>
+      <div class="hotel-pics-title" data-i18n="hotelPics">Pictures of the Hotel</div>
       
       <div class="hotel-slider">
         <div class="slider-arrow" id="prevBtn">◀</div>
