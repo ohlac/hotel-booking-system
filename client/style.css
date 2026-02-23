@@ -356,17 +356,6 @@ body{
 .footer-right{text-align:right}
 
 
-@media (max-width:900px){
-  .footer-bar{
-    flex-direction:column;
-    gap:30px;
-    padding:50px 26px 40px;
-    text-align:left;
-  }
-  .footer-right{text-align:left}
-}
-
-
 .hero {
   width: 100%;
   background: url("images/hero2.jpg") center/cover no-repeat;
@@ -1030,6 +1019,9 @@ body{
 .confirm-date{margin-top:30px}
 
 
+
+/* Admin Page */
+
 .admin-layout{
   display:grid;
   flex:1;
@@ -1195,11 +1187,17 @@ body{
 }
 
 
+/* User Page */
+
 .user-layout{
   display:grid;
   grid-template-columns:170px 1fr;
   gap:24px;
   flex:1;
+  width: 100%;
+  max-width: 75%;
+  margin: 0 auto;
+  margin-top: 40px;
 }
 
 
@@ -1538,6 +1536,14 @@ body{
     text-align: center;
     max-width: 200px;
   }
+  /*Footer*/
+  .footer-bar{
+    flex-direction:column;
+    gap:30px;
+    padding:50px 26px 40px;
+    text-align:left;
+  }
+  .footer-right{text-align:left}
 
   /*Hero*/
   .hero {
