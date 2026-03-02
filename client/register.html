@@ -76,30 +76,30 @@
       </section>
 
       <section class="login-box">
-        <div class="login-form">
+        <form class="register-form">
 
           <div class="login-left">
             <label data-i18n="email">E-Mail:</label>
-            <input type="email" class="real-input">
+            <input type="email" id="reg-email"class="real-input" required>
 
             <label data-i18n="username">Username:</label>
-            <input type="text" class="real-input">
+            <input type="text" id="reg-username"class="real-input" required>
 
             <label data-i18n="fullName">Full Name:</label>
-            <input type="text" class="real-input">
+            <input type="text" id="reg-fullname"class="real-input" required>
 
             <label data-i18n="password">Password:</label>
-            <input type="password" class="real-input">
+            <input type="password" id="reg-password" class="real-input" required>
 
             <label data-i18n="repeatPassword">Repeat Password:</label>
-            <input type="password" class="real-input">
+            <input type="password" id="reg-confirm-password" class="real-input" required>
           </div>
 
           <div class="login-right">
-            <button class="search-btn" data-i18n="registerBtn">Register</button>
+            <button type="submit"class="search-btn" data-i18n="registerBtn">Register</button>
           </div>
 
-        </div>
+        </form>
       </section>
 
       <footer class="footer-bar">

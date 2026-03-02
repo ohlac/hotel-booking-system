@@ -117,11 +117,11 @@ if (registerForm) {
   registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const email = registerForm.querySelectorAll('input')[0].value;
-    const username = registerForm.querySelectorAll('input')[1].value;
-    const fullName = registerForm.querySelectorAll('input')[2].value;
-    const password = registerForm.querySelectorAll('input')[3].value;
-    const confirmPassword = registerForm.querySelectorAll('input')[4].value;
+    const email = document.getElementById('reg-email').value;
+    const username = document.getElementById('reg-username').value;
+    const fullName = document.getElementById('reg-fullname').value;
+    const password = document.getElementById('reg-password').value;
+    const confirmPassword = document.getElementById('reg-confirm-password').value;
 
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
