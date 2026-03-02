@@ -72,6 +72,36 @@ app.get('/api/rooms', async (req, res) => {
     }
 });
 
+
+// Registrering av nya användare
+app.post('/api/register', async (req, res) => {
+    const { email, username, fullName, password } = req.body;
+
+    try {
+        // Kolla om användarnamnet redan finns
+        const [existingUser] = await pool.promise().query(
+            'SELECT * FROM users WHERE username = ? OR email = ?',
+            [username, email]
+        );
+
+        if (existingUser.length > 0) {
+            return res.status(400).json({ error: 'Username or email already exists' });
+        }
+
+        // Lägg till ny användare i databasen
+        await pool.promise().query(
+            'INSERT INTO users (email, username, full_name, password, role) VALUES (?, ?, ?, ?, ?)',
+            [email, username, fullName, password, 'user']
+        );
+
+        res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+        console.error('Error during registration:', error);
+        res.status(500).json({ error: 'Could not register user' });
+    }
+});
+
+
 // Logga in
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;

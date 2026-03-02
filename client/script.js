@@ -1,4 +1,4 @@
-// API-adress till backend
+// Adress till api
 const API_länk = 'https://hotel-api-67w7.onrender.com';
 
 // HTML-element
@@ -106,6 +106,50 @@ if (loginForm) {
     }
   });
 }
+
+
+
+
+// Registrering
+const registerForm = document.querySelector('.register-form');
+
+if (registerForm) {
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = registerForm.querySelectorAll('input')[0].value;
+    const username = registerForm.querySelectorAll('input')[1].value;
+    const fullName = registerForm.querySelectorAll('input')[2].value;
+    const password = registerForm.querySelectorAll('input')[3].value;
+    const confirmPassword = registerForm.querySelectorAll('input')[4].value;
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_länk}/api/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, username, fullName, password })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Registration successful!");
+        window.location.href = 'login.html';
+      } else {
+        alert("Registration failed: " + result.message);
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      alert("An error occurred during registration.");
+    }
+  });
+}
+
 
 // Hämta rum från backend
 if (roomsContainer) {
