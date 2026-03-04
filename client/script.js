@@ -465,7 +465,7 @@ if (saveBtn) {
       const result = await response.json();
 
       if (response.ok) {
-        alert("Settings updated!");
+        document.getElementById("settings-message").textContent = "Settings updated successfully!";
       } else {
         alert("Error: " + result.message);
       }

@@ -1288,6 +1288,53 @@ body{
   min-width:0;
 }
 
+#ettings-message{
+color: rgb(49, 180, 49);
+margin-top:10px;
+font-weight:bold;
+}
+
+#user-settings input{
+width:220px;
+padding:8px 10px;
+border-radius:6px;
+border:1px solid #d4af37;
+background-color:#1c1c1c;
+color:white;
+margin-right:10px;
+}
+
+#save-user-settings{
+background:#d4af37;
+color:black;
+border:none;
+padding:8px 16px;
+border-radius:6px;
+cursor:pointer;
+font-weight:bold;
+}
+
+#save-user-settings:hover{
+background:#f1c84c;
+}
+
+#settings-message{
+color:#7CFC00;
+margin-top:15px;
+font-weight:bold;
+font-size:14px;
+}
+
+
+#user-settings{
+display:flex;
+align-items:center;
+gap:15px;
+flex-wrap:wrap;
+}
+
+
+
 
 .line-title{
   font-size:18px;
