@@ -3,8 +3,8 @@ const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const session = require('express-session');
-
 const app = express();
+
 
 app.set('trust proxy', 1);
 
@@ -15,7 +15,7 @@ app.use(cors({
         'http://127.0.0.1:5500',
         'http://localhost:5500'
     ],
-    methods: ['GET', 'POST'],
+    methods: ["GET","POST","PUT","DELETE"],
     credentials: true,
     exposedHeaders: ['set-cookie']
 }));
@@ -61,6 +61,7 @@ app.get('/', (req, res) => {
 // hämta alla rum
 app.get('/api/rooms', async (req, res) => {
     try {
+
         // Ställ en fråga till databasen
         const [rows] = await pool.promise().query('SELECT * FROM rooms');
         
@@ -146,12 +147,34 @@ app.get('/api/check-auth', (req, res) => {
 });
 
 // Logga ut
+
 app.post('/api/logout', (req, res) => {
     req.session.destroy(() => {
         res.clearCookie('hotel_session'); // Rensa cookie
         res.json({ loggedIn: false });
     });
 });
+
+
+// uppdatera användarinställningar
+app.put('/api/update-user', async (req, res) => {
+    if (!req.session.user) {
+        res.status(401).json({ message: "Not logged in" });
+        return;
+    }
+    const userId = req.session.user.id;
+    const email = req.body.email;
+    const password = req.body.password;
+    try {
+        const sql = "UPDATE users SET email = ?, password = ? WHERE id = ?";
+        await pool.promise().query(sql, [email, password, userId]);
+        res.json({ message: "User updated successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 
 // Starta servern
 const PORT = process.env.PORT || 3000;

@@ -64,7 +64,7 @@
           <a class="nav-btn active" href="user.html" data-i18n="navUser">User Page / Bookings</a>
           <a class="nav-btn" href="login.html" data-i18n="navLogin">Log In</a>
           <a class="nav-btn admin-hidden" href="admin.html" data-i18n="navAdmin">Admin</a>
-          <a class="nav-btn" href="#" id="langBtn">EN | SV</a>s
+          <a class="nav-btn" href="#" id="langBtn">EN | SV</a>
         </nav>
 
       </section>
@@ -72,14 +72,16 @@
       <section class="user-layout">
 
         <aside class="user-side">
-          <a class="active" href="#" data-i18n="userMyBookings">My Bookings</a>
-          <a href="#" data-i18n="userSettings">User Settings</a>
+          <a class="active" href="#" data-i18n="userMyBookings" onclick="showBookings()">My Bookings</a>
+          <a href="#" data-i18n="userSettings" onclick="showSettings()"> User Settings</a>
+
 
         </aside>
 
         <div class="page-white">
+
           <section class="user-main">
-            
+            <div id="bookings-section">
             <div class="user-welcome" data-i18n="userWelcome">Welcome back, [User]!</div>
             <div class="user-title" data-i18n="userBookingsTitle">Your Bookings:</div>
 
@@ -101,6 +103,20 @@
               <div class="user-img" data-i18n="imgText">Image</div>
 
             </article>
+            </div>
+            
+            <div id="user-settings" style="display:none;">
+              <h2>User Settings</h2>
+
+              <label>Email</label>
+              <input type="email" id="user-email">
+
+           
+              <label>Password</label>
+              <input type="password" id="user-password">
+              <button id="save-user-settings">Save Changes</button>
+            </div>
+
 
           </section>
         </div>

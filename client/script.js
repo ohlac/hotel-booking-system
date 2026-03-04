@@ -423,3 +423,60 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+// Visa användarinställningar
+function showSettings(){
+  document.getElementById("bookings-section").style.display = "none";
+  document.getElementById("user-settings").style.display = "block";
+}
+
+// visa bokningar
+
+function showBookings(){
+  document.getElementById("bookings-section").style.display = "block";
+  document.getElementById("user-settings").style.display = "none";
+}
+
+
+// Save user settingss
+const saveBtn = document.getElementById("save-user-settings");
+
+if (saveBtn) {
+
+  saveBtn.addEventListener("click", async () => {
+
+    const email = document.getElementById("user-email").value;
+    const password = document.getElementById("user-password").value;
+
+    try {
+
+      const response = await fetch(`${API_länk}/api/update-user`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Settings updated!");
+      } else {
+        alert("Error: " + result.message);
+      }
+
+    } catch (error) {
+
+      console.error(error);
+      alert("Something went wrong");
+
+    }
+
+  });
+
+}
