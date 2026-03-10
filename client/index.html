@@ -61,7 +61,7 @@
           <a class="nav-btn" href="login.html" data-i18n="navLogin">Log In</a>
           <a class="nav-btn admin-hidden" href="admin.html" data-i18n="navAdmin">Admin</a>
           <a class="nav-btn" href="#" id="langBtn">EN | SV</a>
-        
+          
         </nav>
         
       </section>
@@ -79,30 +79,31 @@
               <span data-i18n="roomDouble">Double Rooms have 2 king-size beds</span><br>
               <span data-i18n="roomSuite">Suite Rooms have 1 king-size bed and a separate sitting area</span>
             </p>
-
+            
           </div>
-
+          
           <div class="find-panel">
             <h2 data-i18n="findTitle">Find a Room</h2>
             
-            <form class="find-form">
-
+            <form class="find-form" id="search-form">
+              
               <div class="field">
                 <label data-i18n="checkin">Check-in date</label>
-                <input type="date" class="real-input" />
+                <input type="date" id="search-start" class="real-input" required />
               </div>
               
               <div class="field">
                 <label data-i18n="checkout">Check-out date</label>
-                <input type="date" class="real-input" />
+                <input type="date" id="search-end" class="real-input" required />
               </div>
               
               <div class="field">
                 <label data-i18n="roomType">Room type</label>
-                <select class="real-input">
-                  <option data-i18n="single">Single</option>
-                  <option data-i18n="double">Double</option>
-                  <option data-i18n="suite">Suite</option>
+                <select id="search-type" class="real-input">
+                  <option value="Any">Any</option>
+                  <option value="Single" data-i18n="single">Single</option>
+                  <option value="Double" data-i18n="double">Double</option>
+                  <option value="Suite" data-i18n="suite">Suite</option>
                 </select>
               </div>
               
