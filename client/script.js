@@ -188,150 +188,155 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function getRooms(start = '', end = '', type = '') {
-    const roomsContainer = document.getElementById('rooms-container');
-    if (!roomsContainer) return;
-    
-    try {
-        let url = `${API_länk}/api/rooms`;
-        if (start && end) {
-            url += `?start=${start}&end=${end}&type=${type}`;
-        }
+  const roomsContainer = document.getElementById('rooms-container');
+  if (!roomsContainer) return;
+  
+  try {
+      let url = `${API_länk}/api/rooms`;
+      if (start && end) {
+          url += `?start=${start}&end=${end}&type=${type}`;
+      }
 
-        const response = await fetch(url);
-        const rooms = await response.json();
+      const response = await fetch(url);
+      const rooms = await response.json();
 
-        roomsContainer.innerHTML = ''; // Tömmer rutan
+      roomsContainer.innerHTML = ''; // Tömmer rutan
 
-        if (rooms.length === 0) {
-            roomsContainer.innerHTML = `<p style="text-align:center; width:100%;">No available rooms found for these dates.</p>`;
-            return;
-        }
+      if (rooms.length === 0) {
+          roomsContainer.innerHTML = `<p style="text-align:center; width:100%;">No available rooms found for these dates.</p>`;
+          return;
+      }
 
-        rooms.forEach(room => {
-            let imagePath = 'single.jpg'; 
-            if (room.type === 'Double') imagePath = 'double.jpg';
-            if (room.type === 'Suite') imagePath = 'suite.jpg';
+      rooms.forEach(room => {
+          let imagePath = 'single.jpg'; 
+          if (room.type === 'Double') imagePath = 'double.jpg';
+          if (room.type === 'Suite') imagePath = 'suite.jpg';
 
-            const roomCard = document.createElement('article');
-            roomCard.classList.add('room-card');
-            roomCard.innerHTML = `
-                 <div class="room-text">
-                    <h3 class="room-title">Room ${room.room_number} - ${room.type}</h3>
-                    <p class="room-desc">${room.description}</p>
-                    <p class="room-desc" style="font-weight: bold; color: #d4af37;">Price: ${room.price_per_night} kr/night</p>
-                    <button class="search-btn" onclick="bookRoom(${room.id})">Book Room</button>
-                </div>
-                <div class="room-image-container">
-                    <img src="images/rooms/${imagePath}" alt="${room.type} room" class="room-image">
-                </div>
-            `;
-            roomsContainer.appendChild(roomCard);
-        });
+          const roomCard = document.createElement('article');
+          roomCard.classList.add('room-card');
+          roomCard.innerHTML = `
+               <div class="room-text">
+                  <h3 class="room-title">Room ${room.room_number} - ${room.type}</h3>
+                  <p class="room-desc">${room.description}</p>
+                  <p class="room-desc" style="font-weight: bold; color: #d4af37;">Price: ${room.price_per_night} kr/night</p>
+                  <button class="search-btn" onclick="bookRoom(${room.id})">Book Room</button>
+              </div>
+              <div class="room-image-container">
+                  <img src="images/rooms/${imagePath}" alt="${room.type} room" class="room-image">
+              </div>
+          `;
+          roomsContainer.appendChild(roomCard);
+      });
 
-    } catch (error) {
-        console.error('Fel vid hämtning av rum:', error);
-        roomsContainer.innerHTML = `<p style="text-align:center; color:red;">Kunde inte hämta rum.</p>`;
-    }
+  } catch (error) {
+      console.error('Fel vid hämtning av rum:', error);
+      roomsContainer.innerHTML = `<p style="text-align:center; color:red;">Kunde inte hämta rum.</p>`;
+  }
 }
 
 window.bookRoom = async function(roomId) {
-    const startInput = document.getElementById('search-start');
-    const endInput = document.getElementById('search-end');
-    
-    if (!startInput || !endInput || !startInput.value || !endInput.value) {
-        alert("Please select check-in and check-out dates in the search panel above before booking!");
-        return;
-    }
+  const startInput = document.getElementById('search-start');
+  const endInput = document.getElementById('search-end');
+  
+  if (!startInput || !endInput || !startInput.value || !endInput.value) {
+      alert("Please search for available dates in the panel above before booking a room!");
+      return;
+  }
 
-    const startDate = startInput.value;
-    const endDate = endInput.value;
+  const startDate = startInput.value;
+  const endDate = endInput.value;
 
-    try {
-        const response = await fetch(`${API_länk}/api/bookings`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ roomId, startDate, endDate })
-        });
+  try {
+      const response = await fetch(`${API_länk}/api/bookings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ roomId, startDate, endDate })
+      });
 
-        if (response.ok) {
-            alert("Room successfully booked! View it on your User Page.");
-            const type = document.getElementById('search-type').value;
-            getRooms(startDate, endDate, type); 
-        } else {
-            const err = await response.json();
-            alert("Booking failed: " + (err.message || "You need to log in first."));
-            if(err.message === "Not logged in") window.location.href = "login.html";
-        }
-    } catch (error) {
-        console.error("Bokningsfel:", error);
-    }
+      if (response.ok) {
+          alert("Room successfully booked! View it on your User Page.");
+          const type = document.getElementById('search-type').value;
+          getRooms(startDate, endDate, type); // Laddar om listan så rummet försvinner
+      } else {
+          // Skydd mot "Unexpected token <" om Render svarar med en felsida
+          const isJson = response.headers.get('content-type')?.includes('application/json');
+          const data = isJson ? await response.json() : null;
+          const errorMsg = data ? data.message : "You need to log in first or backend is missing.";
+          
+          alert("Booking failed: " + errorMsg);
+          if(response.status === 401 || errorMsg.includes("log in")) window.location.href = "login.html";
+      }
+  } catch (error) {
+      console.error("Bokningsfel:", error);
+      alert("Network error. Server might be restarting.");
+  }
 }
 
 async function getUserBookings() {
-    const listContainer = document.getElementById('bookings-list');
-    if (!listContainer) return;
+  const listContainer = document.getElementById('bookings-list');
+  if (!listContainer) return;
 
-    try {
-        const response = await fetch(`${API_länk}/api/user/bookings`, { credentials: 'include' });
-        const bookings = await response.json();
+  try {
+      const response = await fetch(`${API_länk}/api/user/bookings`, { credentials: 'include' });
+      
+      if (!response.ok) throw new Error("Ej inloggad eller serverfel");
+      const bookings = await response.json();
 
-        listContainer.innerHTML = ''; 
+      listContainer.innerHTML = ''; // Rensar "Loading your bookings..."
 
-        if (bookings.length === 0) {
-            listContainer.innerHTML = "<p>You have no active bookings.</p>";
-            return;
-        }
+      if (bookings.length === 0) {
+          listContainer.innerHTML = "<p>You have no current bookings.</p>";
+          return;
+      }
 
-        bookings.forEach(b => {
-            const card = document.createElement('article');
-            card.classList.add('user-booking-card');
-            
-            const start = new Date(b.start_date).toLocaleDateString();
-            const end = new Date(b.end_date).toLocaleDateString();
+      bookings.forEach(b => {
+          const card = document.createElement('article');
+          card.classList.add('user-booking-card');
+          
+          const start = new Date(b.start_date).toLocaleDateString();
+          const end = new Date(b.end_date).toLocaleDateString();
 
-            let imagePath = 'single.jpg';
-            if (b.type === 'Double') imagePath = 'double.jpg';
-            if (b.type === 'Suite') imagePath = 'suite.jpg';
+          let imagePath = 'single.jpg';
+          if (b.type === 'Double') imagePath = 'double.jpg';
+          if (b.type === 'Suite') imagePath = 'suite.jpg';
 
-            card.innerHTML = `
-                <div class="user-lines">
-                    <div class="line-title">Room ${b.room_number}</div>
-                    <div class="line">Type: ${b.type}</div>
-                    <div class="line">Start Date: ${start}</div>
-                </div>
-                <div class="user-dates">
-                    <div class="end-date">End Date: ${end}</div>
-                    <button class="cancel-btn" onclick="cancelBooking(${b.booking_id})">Cancel Booking</button>
-                </div>
-                <div class="user-img" style="background-image: url('images/rooms/${imagePath}'); background-size: cover; background-position: center;"></div>
-            `;
-            listContainer.appendChild(card);
-        });
-    } catch (error) {
-        console.error("Fel vid hämtning:", error);
-        listContainer.innerHTML = "<p>Kunde inte hämta bokningar just nu.</p>";
-    }
+          card.innerHTML = `
+              <div class="user-lines">
+                  <div class="line-title">Room ${b.room_number}</div>
+                  <div class="line">Type: ${b.type}</div>
+                  <div class="line">Start Date: ${start}</div>
+              </div>
+              <div class="user-dates">
+                  <div class="end-date">End Date: ${end}</div>
+                  <button class="cancel-btn" onclick="cancelBooking(${b.booking_id})">Cancel Booking</button>
+              </div>
+              <div class="user-img" style="background-image: url('images/rooms/${imagePath}'); background-size: cover; background-position: center;"></div>
+          `;
+          listContainer.appendChild(card);
+      });
+  } catch (error) {
+      console.error("Fel vid hämtning:", error);
+      listContainer.innerHTML = "<p>Logga in för att se dina bokningar.</p>";
+  }
 }
 
 window.cancelBooking = async function(bookingId) {
-    if (!confirm("Are you sure you want to cancel this booking?")) return;
-    try {
-        const response = await fetch(`${API_länk}/api/bookings/${bookingId}`, {
-            method: 'DELETE',
-            credentials: 'include'
-        });
-        if (response.ok) {
-            getUserBookings(); 
-        } else {
-            alert("Kunde inte avboka.");
-        }
-    } catch (error) {
-        console.error(error);
-    }
+  if (!confirm("Are you sure you want to cancel this booking?")) return;
+  try {
+      const response = await fetch(`${API_länk}/api/bookings/${bookingId}`, {
+          method: 'DELETE',
+          credentials: 'include'
+      });
+      if (response.ok) {
+          getUserBookings(); // Ladda om listan direkt efter avbokning
+      } else {
+          alert("Kunde inte avboka.");
+      }
+  } catch (error) {
+      console.error(error);
+  }
 }
-
-
 
 
 // Bildslider på hotel-info.html

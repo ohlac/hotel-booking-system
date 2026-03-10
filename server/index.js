@@ -58,187 +58,25 @@ app.get('/', (req, res) => {
     res.send('Hotel-API is running');
 });
 
-// hämta alla rum
-app.get('/api/rooms', async (req, res) => {
-    try {
-        
-        // Ställ en fråga till databasen
-        const [rows] = await pool.promise().query('SELECT * FROM rooms');
-        
-        // Skicka tillbaka rum
-        res.json(rows);
-    } catch (error) {
-        console.error('Error while fetching rooms:', error);
-        res.status(500).json({ error: 'Could not fetch rooms' });
-    }
-});
+// ===============================================
+// RUTTER (ENDPOINTS)
+// ===============================================
 
-
-// Registrering av nya användare
-app.post('/api/register', async (req, res) => {
-    const { email, username, fullName, password } = req.body;
-    
-    try {
-        // Kolla om användarnamnet redan finns
-        const [existingUser] = await pool.promise().query(
-        'SELECT * FROM users WHERE username = ? OR email = ?',
-        [username, email]
-        );
-        
-        if (existingUser.length > 0) {
-            return res.status(400).json({ error: 'Username or email already exists' });
-        }
-        
-        // Lägg till ny användare i databasen
-        await pool.promise().query(
-        'INSERT INTO users (email, username, full_name, password, role) VALUES (?, ?, ?, ?, ?)',
-        [email, username, fullName, password, 'user']
-        );
-        
-        res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {
-        console.error('Error during registration:', error);
-        res.status(500).json({ error: 'Could not register user' });
-    }
-});
-
-
-// Logga in
-app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
-    
-    try {
-        const [users] = await pool.promise().query('SELECT * FROM users WHERE username = ?', [username]); 
-        
-        if (users.length === 0) {
-            return res.status(401).json({ loggedIn: false, message: 'Wrong username or password' });
-        }
-        
-        const user = users[0];
-        
-        if (password === user.password) { // OBS OBS OBS lösenord krypteras inte just nu
-            //spara användarinfo i sessionen
-            req.session.user = {
-                id: user.id,
-                username: user.username,
-                role: user.role //admin eller user
-            };
-            req.session.save((err) => {
-                if (err) return res.status(500).json({ error: 'Could not save session' });
-                res.json({ loggedIn: true, role: user.role });
-            }); 
-            
-        } else {
-            res.status(401).json({ loggedIn: false, message: 'Wrong username or password' });
-        }
-    } catch (error) {
-        console.error('Error while logging in:', error);
-        res.status(500).json({ error: 'Could not log in' });
-    }
-});
-
-// Kolla om redan inloggad
-app.get('/api/check-auth', (req, res) => {
-    if (req.session.user) {
-        res.json({ loggedIn: true, user: req.session.user });
-    } else {
-        res.json({ loggedIn: false });
-    }
-});
-
-// Logga ut
-
-app.post('/api/logout', (req, res) => {
-    req.session.destroy(() => {
-        res.clearCookie('hotel_session'); // Rensa cookie
-        res.json({ loggedIn: false });
-    });
-});
-
-
-// uppdatera användarinställningar
-app.put('/api/update-user', async (req, res) => {
-    if (!req.session.user) {
-        res.status(401).json({ message: "Not logged in" });
-        return;
-    }
-    const userId = req.session.user.id;
-    const email = req.body.email;
-    const password = req.body.password;
-    try {
-        const sql = "UPDATE users SET email = ?, password = ? WHERE id = ?";
-        await pool.promise().query(sql, [email, password, userId]);
-        res.json({ message: "User updated successfully" });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error" });
-    }
-});
-
-
-// Skapa bokning
-app.post('/api/bookings', async (req, res) => {
-    if (!req.session.user) {
-        return res.status(401).json({ message: "Not logged in" });
-    }
-    
-    const { roomId, startDate, endDate } = req.body;
-    const userId = req.session.user.id;
-    
-    try { 
-        // Spara bokningen i databasen
-        const sql = "INSERT INTO bookings (user_id, room_id, start_date, end_date) VALUES (?, ?, ?, ?)";
-        await pool.promise().query(sql, [userId, roomId, startDate, endDate]);
-        
-        res.status(201).json({ message: "Booking created successfully" });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Could not book room" });
-    }
-});
-
-// Hämta användarens bokningar
-app.get('/api/user/bookings', async (req, res) => {
-    if (!req.session.user) {
-        return res.status(401).json({ message: "Not logged in" });
-    }
-    
-    const userId = req.session.user.id;
-    
-    try {
-        const sql = `
-        SELECT b.id as booking_id, b.start_date, b.end_date, r.room_number, r.type, r.price_per_night 
-        FROM bookings b
-        JOIN rooms r ON b.room_id = r.id
-        WHERE b.user_id = ?
-        `;
-        const [rows] = await pool.promise().query(sql, [userId]);
-        res.json(rows);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Could not fetch bookings" });
-    }
-});
-
-// Uppdatera för att bara visa lediga rum
+// Hämta rum (och filtrera bort bokade om man har valt datum)
 app.get('/api/rooms', async (req, res) => {
     const { start, end, type } = req.query;
-
     try {
         let sql = "SELECT * FROM rooms";
         const params = [];
 
-        // Om användaren har fyllt i datum i sökpanelen:
         if (start && end) {
             sql += ` WHERE id NOT IN (
                 SELECT room_id FROM bookings 
                 WHERE start_date < ? AND end_date > ?
             )`;
-            // Logik: Ett rum döljs bara om en annans bokning överlappar våra valda datum
             params.push(end, start); 
         }
 
-        // Om användaren vill filtrera på typ (Single, Double, Suite)
         if (type && type !== 'Any') {
             if (params.length > 0) {
                 sql += " AND type = ?";
@@ -251,23 +89,129 @@ app.get('/api/rooms', async (req, res) => {
         const [rows] = await pool.promise().query(sql, params);
         res.json(rows);
     } catch (error) {
-        console.error("Error while searching for rooms:", error);
-        res.status(500).json({ error: "Could not fetch rooms" });
+        console.error('Fel vid hämtning av rum:', error);
+        res.status(500).json({ error: 'Kunde inte hämta rum' });
     }
 });
 
+// Skapa ny bokning
+app.post('/api/bookings', async (req, res) => {
+    if (!req.session.user) return res.status(401).json({ message: "You need to log in first." });
+    
+    const { roomId, startDate, endDate } = req.body;
+    const userId = req.session.user.id;
+    
+    try { 
+        const sql = "INSERT INTO bookings (user_id, room_id, start_date, end_date) VALUES (?, ?, ?, ?)";
+        await pool.promise().query(sql, [userId, roomId, startDate, endDate]);
+        res.status(201).json({ message: "Booking created successfully" });
+    } catch (error) {
+        console.error("Fel vid bokning:", error);
+        res.status(500).json({ message: "Could not book room" });
+    }
+});
 
-// Ta bort bokning
+// Hämta inloggad användares bokningar
+app.get('/api/user/bookings', async (req, res) => {
+    if (!req.session.user) return res.status(401).json({ message: "Not logged in" });
+    
+    const userId = req.session.user.id;
+    try {
+        const sql = `
+        SELECT b.id as booking_id, b.start_date, b.end_date, r.room_number, r.type, r.price_per_night 
+        FROM bookings b
+        JOIN rooms r ON b.room_id = r.id
+        WHERE b.user_id = ?
+        `;
+        const [rows] = await pool.promise().query(sql, [userId]);
+        res.json(rows);
+    } catch (error) {
+        console.error("Fel vid hämtning av användarens bokningar:", error);
+        res.status(500).json({ message: "Could not fetch bookings" });
+    }
+});
+
+// Avboka ett rum (Ta bort bokning)
 app.delete('/api/bookings/:id', async (req, res) => {
     if (!req.session.user) return res.status(401).json({ message: "Not logged in" });
+    
     try {
         const bookingId = req.params.id;
         const userId = req.session.user.id;
-        // Säkerställer att användaren bara kan ta bort sina egna bokningar
+        // userId används i villkoret så att man bara kan radera sina egna bokningar
         await pool.promise().query('DELETE FROM bookings WHERE id = ? AND user_id = ?', [bookingId, userId]);
         res.json({ message: "Booking cancelled" });
     } catch (error) {
         res.status(500).json({ message: "Could not cancel booking" });
+    }
+});
+
+// Registrera
+app.post('/api/register', async (req, res) => {
+    const { email, username, fullName, password } = req.body;
+    try {
+        const [existingUser] = await pool.promise().query('SELECT * FROM users WHERE username = ? OR email = ?', [username, email]);
+        if (existingUser.length > 0) return res.status(400).json({ error: 'Username or email already exists' });
+        
+        await pool.promise().query(
+            'INSERT INTO users (email, username, full_name, password, role) VALUES (?, ?, ?, ?, ?)',
+            [email, username, fullName, password, 'user']
+        );
+        res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Could not register user' });
+    }
+});
+
+// Logga in
+app.post('/api/login', async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        const [users] = await pool.promise().query('SELECT * FROM users WHERE username = ?', [username]); 
+        if (users.length === 0) return res.status(401).json({ loggedIn: false, message: 'Felaktigt användarnamn' });
+        
+        const user = users[0];
+        if (password === user.password) {
+            req.session.user = { id: user.id, username: user.username, role: user.role };
+            req.session.save((err) => {
+                if (err) return res.status(500).json({ error: 'Kunde inte spara session' });
+                res.json({ loggedIn: true, role: user.role });
+            }); 
+        } else {
+            res.status(401).json({ loggedIn: false, message: 'Felaktigt lösenord' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Kunde inte logga in' });
+    }
+});
+
+// Kontrollera om inloggad
+app.get('/api/check-auth', (req, res) => {
+    if (req.session.user) {
+        res.json({ loggedIn: true, user: req.session.user });
+    } else {
+        res.json({ loggedIn: false });
+    }
+});
+
+// Logga ut
+app.post('/api/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.clearCookie('hotel_session');
+        res.json({ loggedIn: false });
+    });
+});
+
+// Uppdatera användarinställningar
+app.put('/api/update-user', async (req, res) => {
+    if (!req.session.user) return res.status(401).json({ message: "Not logged in" });
+    const userId = req.session.user.id;
+    const { email, password } = req.body;
+    try {
+        await pool.promise().query("UPDATE users SET email = ?, password = ? WHERE id = ?", [email, password, userId]);
+        res.json({ message: "User updated successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Server error" });
     }
 });
 
