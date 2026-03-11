@@ -75,8 +75,7 @@ app.get('/api/rooms', async (req, res) => {
         ) THEN 'Booked'
          ELSE 'Available'
          END AS status
-         FROM rooms r
-         `;
+         FROM rooms r`;
 
         const params = [];
 

@@ -1864,3 +1864,13 @@ flex-wrap:wrap;
   }
 
 
+
+.available{
+color:green;
+font-weight:bold;
+}
+
+.booked{
+color:red;
+font-weight:bold;
+}

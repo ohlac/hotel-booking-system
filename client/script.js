@@ -584,8 +584,11 @@ async function loadAdminRooms(){
   rooms.forEach(room => {
   const card = document.createElement("div");
   card.innerHTML = `
-  <div style="border:1px solid #555;padding:15px;margin:10px;">
-  Room ${room.room_number} - ${room.status}
+  <div class="admin-room">
+  Room ${room.room_number} - 
+  <span class="${room.status === 'Booked' ? 'booked' : 'available'}">
+  ${room.status}
+  </span>
   <br>
   Type: ${room.type}
   <br>
@@ -596,6 +599,8 @@ async function loadAdminRooms(){
   </button>
   </div>
   `;
+
+
   container.appendChild(card);
  });
 }
