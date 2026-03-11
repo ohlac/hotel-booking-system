@@ -7,13 +7,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
   <div class="page-frame">
     <main class="main-box">
-
       <section class="top-area">
-
         <div class="logo">
           <div class="logo-mark" aria-label="California logo">
             <svg class="logo-svg" viewBox="0 0 220 140" role="img">
@@ -23,20 +20,16 @@
                   <stop offset="55%" stop-color="var(--sun-2)"/>
                   <stop offset="100%" stop-color="var(--sun-3)"/>
                 </radialGradient>
-
                 <linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
                   <stop offset="0%" stop-color="var(--wave-1)"/>
                   <stop offset="55%" stop-color="var(--wave-2)"/>
                   <stop offset="100%" stop-color="var(--wave-3)"/>
                 </linearGradient>
-
                 <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
                   <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.35)"/>
                 </filter>
               </defs>
-
               <circle cx="150" cy="58" r="44" fill="url(#sunGrad)" filter="url(#softShadow)"/>
-
               <path d="M22 110
                        C55 95, 85 98, 110 108
                        C140 120, 170 120, 202 106
@@ -44,18 +37,16 @@
                        C168 134, 136 136, 108 126
                        C80 116, 52 114, 22 126 Z"
                     fill="url(#waveGrad)" opacity="0.92" filter="url(#softShadow)"/>
-
               <path d="M30 118
                        C58 106, 86 108, 112 118
                        C138 128, 166 128, 192 114"
                     fill="none" stroke="var(--wave-highlight)" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
-
               <g fill="none" stroke="var(--ink)" stroke-linecap="round" stroke-linejoin="round" filter="url(#softShadow)">
                 <path d="M72 48 C62 66, 60 86, 64 110" stroke-width="8"/>
                 <path d="M66 66 h14" stroke-width="2" opacity="0.35"/>
                 <path d="M63 80 h16" stroke-width="2" opacity="0.28"/>
                 <path d="M62 94 h16" stroke-width="2" opacity="0.22"/>
-                
+               
                 <path d="M78 52 C78 48, 74 44, 70 44" stroke-width="6"/>
                 <path d="M74 44 C48 30, 30 30, 18 44 C34 42, 48 44, 62 52" stroke-width="6"/>
                 <path d="M76 44 C56 18, 44 12, 34 18 C48 22, 58 30, 70 50" stroke-width="6"/>
@@ -64,13 +55,11 @@
               </g>
             </svg>
           </div>
-
           <div class="logo-text">
             <div class="logo-name">California</div>
             <div class="logo-divider"></div>
           </div>
         </div>
-
         <nav class="nav">
           <a class="nav-btn" href="index.html" data-i18n="navFind">Find a Room</a>
           <a class="nav-btn" href="hotel-info.html" data-i18n="navInfo">Hotel Information</a>
@@ -79,71 +68,72 @@
           <a class="nav-btn admin-hidden active" href="admin.html" data-i18n="navAdmin">Admin</a>
           <a class="nav-btn" href="#" id="langBtn">EN | SV</a>
         </nav>
-
       </section>
-
       <section class="admin-layout">
-
         <aside class="admin-side">
-          <a class="admin-side-btn active" href="#" data-i18n="adminCurrentBookings">Current Bookings</a>
-          <a class="admin-side-btn" href="#" data-i18n="adminMangeRooms">Manage Rooms</a>
+          <a class="admin-side-btn active"
+          onclick="showAdminBookings()"
+          data-i18n="adminCurrentBookings">
+          Current Bookings
+          </a>
+         
+          <a class="admin-side-btn"
+          onclick="showAdminRooms()"
+          data-i18n="adminManageRooms">
+          Manage Rooms
+          </a>
         </aside>
-
         <section class="admin-content">
 
-          <div class="admin-stats">
-            <div class="admin-stat-box">
-              <div class="admin-stat-title" data-i18n="adminTotalBookings">Total Current Bookings</div>
-              <div class="admin-stat-value">2</div>
-            </div>
+          <div id="admin-bookings">
+             <div class="admin-section-title" data-i18n="adminCurrentBookingsTitle">
+              Current Bookings
+             </div>
 
+            <div class="admin-stats">
+
+              <div class="admin-stat-box">
+              <div class="admin-stat-title" data-i18n="adminTotalBookings">
+                Total Current Bookings
+              </div>
+              <div class="admin-stat-value" id="total-bookings">
+                0
+              </div>
+            </div>
+           
             <div class="admin-stat-box">
-              <div class="admin-stat-title" data-i18n="adminAvailableRooms">Available Rooms</div>
-              <div class="admin-stat-value">13</div>
+              <div class="admin-stat-title" data-i18n="adminAvailableRooms">
+                Available Rooms
+              </div>
+              <div class="admin-stat-value" id= "available-rooms">
+                0
+              </div>
             </div>
           </div>
+         
+          <div class="admin-cards"></div>
+        </div>
 
-          <div class="admin-section-title" data-i18n="adminCurrentBookingsTitle">Current Bookings</div>
+          <div id="admin-rooms" style="display:none">
+            <div class="admin-section-title">
+              Manage Rooms
+            </div>
 
-          <div class="admin-cards">
 
-            <article class="admin-booking-card">
-              <div class="admin-room-info">
-                <div class="admin-room-title">Room 104</div>
-                <div>Room Type: Single</div>
-                <div>Booked for: [User]</div>
-              </div>
+            <div class="add-room-form">
+              <input type="text" id="room-number" placeholder="Room number">
+              <input type="text" id="room-type" placeholder="Room type">
+              <input type="number" id="room-price" placeholder="Price per night">
 
-              <div class="admin-booked-info">
-                <div class="admin-booked-title" data-i18n="adminBookedFor">Booked for:</div>
-                <div>Start Date: 2026-04-11</div>
-                <div>End Date: 2026-04-12</div>
-              </div>
+              <button class="add-room-btn" onclick="addRoom()">
+                Add Room
+              </button>
+            </div>
 
-              <div class="admin-img-box" data-i18n="imgText">Image</div>
-            </article>
-
-            <article class="admin-booking-card">
-              <div class="admin-room-info">
-                <div class="admin-room-title">Room 202</div>
-                <div>Room Type: Double</div>
-                <div>Booked for: [User]</div>
-              </div>
-
-              <div class="admin-booked-info">
-                <div class="admin-booked-title">Booked for:</div>
-                <div>Start Date: 2026-04-03</div>
-                <div>End Date: 2026-04-06</div>
-              </div>
-
-              <div class="admin-img-box">Image</div>
-            </article>
-
+            <div class="admin-rooms"></div>
           </div>
         </section>
-
       </section>
-
       <footer class="footer-bar">
         <div class="footer-col">
           <div class="footer-title">Contact Information</div>
@@ -152,7 +142,6 @@
           <p>🕒 Reception Open 24 Hours</p>
           <p>🌐 www.hotelcalifornia.se</p>
         </div>
-
         <div class="footer-col">
           <div class="footer-title">Address</div>
           <p>
@@ -162,13 +151,11 @@
             Sweden
           </p>
         </div>
-
         <div class="footer-col footer-right">
           <div class="footer-title">Copyright</div>
           <p>© 2026 Hotel California</p>
         </div>
       </footer>
-
     </main>
   </div>
   <script src="script.js"></script>

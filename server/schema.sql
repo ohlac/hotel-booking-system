@@ -38,8 +38,9 @@ INSERT INTO rooms (room_number, type, price_per_night, description) VALUES
 ('201', 'Double', 1200.00, 'Big room with King size bed.'),
 ('301', 'Suite', 2500.00, 'Luxurious Suite with a view.');
 
-INSERT INTO users (username, password) VALUES 
-('testuser', 'hemligt123'),
-('admin', 'adminpass');
+INSERT INTO users (username,email,full_name,password) VALUES
+('testuser','test@test.com','Test User','hemligt123'),
+('admin','admin@test.com','Admin User','adminpass');
+
 
 SELECT * FROM rooms;

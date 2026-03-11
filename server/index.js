@@ -112,23 +112,54 @@ app.post('/api/bookings', async (req, res) => {
 });
 
 // Hämta inloggad användares bokningar
+// Hämta inloggad användares bokningar
 app.get('/api/user/bookings', async (req, res) => {
-    if (!req.session.user) return res.status(401).json({ message: "Not logged in" });
-    
-    const userId = req.session.user.id;
-    try {
-        const sql = `
-        SELECT b.id as booking_id, b.start_date, b.end_date, r.room_number, r.type, r.price_per_night 
-        FROM bookings b
-        JOIN rooms r ON b.room_id = r.id
-        WHERE b.user_id = ?
-        `;
-        const [rows] = await pool.promise().query(sql, [userId]);
-        res.json(rows);
-    } catch (error) {
-        console.error("Fel vid hämtning av användarens bokningar:", error);
-        res.status(500).json({ message: "Could not fetch bookings" });
-    }
+
+ if (!req.session.user) {
+  return res.status(401).json({ message: "Not logged in" });
+ }
+
+ const userId = req.session.user.id;
+
+ try {
+
+  const sql = `
+  SELECT b.id as booking_id, b.start_date, b.end_date, r.room_number, r.type, r.price_per_night
+  FROM bookings b
+  JOIN rooms r ON b.room_id = r.id
+  WHERE b.user_id = ?
+  `;
+
+  const [rows] = await pool.promise().query(sql, [userId]);
+
+  res.json(rows);
+
+ } catch (error) {
+
+  console.error("Fel vid hämtning av användarens bokningar:", error);
+  res.status(500).json({ message: "Could not fetch bookings" });
+
+ }
+
+});
+
+
+// API för att lägga till ett rum (ADMIN)
+app.post('/api/admin/rooms', async (req,res)=>{
+
+ if(!req.session.user || req.session.user.role !== 'admin'){
+  return res.status(403).json({message:"Admin only"});
+ }
+
+ const {room_number,type,price_per_night} = req.body;
+
+ await pool.promise().query(
+ "INSERT INTO rooms (room_number,type,price_per_night) VALUES (?,?,?)",
+ [room_number,type,price_per_night]
+ );
+
+ res.json({message:"Room added"});
+
 });
 
 // Avboka ett rum (Ta bort bokning)
@@ -220,3 +251,75 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servern körs på http://localhost:${PORT}`);
 });
+
+// Hämta alla bokningar för admin-sidan
+app.get('/api/admin/bookings', async (req,res)=>{
+
+
+ if(!req.session.user || req.session.user.role !== 'admin'){
+  return res.status(403).json({message:"Admin only"});
+ }
+
+
+ const sql = `
+ SELECT 
+ b.id,
+ u.username,
+ r.room_number,
+ r.type,
+ b.start_date,
+ b.end_date
+ FROM bookings b
+ JOIN users u ON b.user_id = u.id
+ JOIN rooms r ON b.room_id = r.id
+ `;
+ const [rows] = await pool.promise().query(sql);
+ res.json(rows);
+
+});
+// API för att ta bort ett rum (endast admin)
+app.delete('/api/admin/rooms/:id', async (req,res)=>{
+
+
+ if(!req.session.user || req.session.user.role !== 'admin'){
+  return res.status(403).json({message:"Admin only"});
+ }
+
+
+ const id = req.params.id;
+ await pool.promise().query(
+ "DELETE FROM rooms WHERE id=?",
+ [id]
+ );
+ res.json({message:"Room deleted"});
+});
+
+app.get('/api/admin/stats', async (req,res)=>{
+ const [rooms] = await pool.promise().query("SELECT COUNT(*) as total FROM rooms");
+ const [bookings] = await pool.promise().query("SELECT COUNT(*) as total FROM bookings");
+ res.json({
+  rooms: rooms[0].total,
+  bookings: bookings[0].total
+ });
+
+});
+
+// API för att lägga till ett rum (ADMIN)
+app.post('/api/admin/rooms', async (req,res)=>{
+
+ if(!req.session.user || req.session.user.role !== 'admin'){
+  return res.status(403).json({message:"Admin only"});
+ }
+
+ const {room_number,type,price_per_night} = req.body;
+
+ await pool.promise().query(
+ "INSERT INTO rooms (room_number,type,price_per_night) VALUES (?,?,?)",
+ [room_number,type,price_per_night]
+ );
+
+ res.json({message:"Room added"});
+});
+
+
+

@@ -1,53 +1,42 @@
 // Adress till api
-const API_länk = 'https://hotel-api-67w7.onrender.com';
-
+const API_länk ="https://hotel-api-67w7.onrender.com";
 // HTML-element
 const roomsContainer = document.getElementById('rooms-container');
 const loginForm = document.querySelector('.login-form');
-
 // Kontrollera om användare är inloggad
 async function checkLoginStatus() {
   try {
     const response = await fetch(`${API_länk}/api/check-auth`, {
       credentials: 'include'
     });
-
     const data = await response.json();
-
     if (data.loggedIn) {
       updateNavForLoggedInUser(data.user.role);
-
       const welcomeText = document.querySelector('#user-welcome');
       if (welcomeText) {
         welcomeText.textContent = `Welcome back, ${data.user.username}!`;
       }
     }
-
     if (window.location.pathname.includes('user.html') && !data.loggedIn) {
       window.location.href = 'login.html';
     }
-
     if (window.location.pathname.includes('admin.html')) {
       if (!data.loggedIn || data.user.role !== 'admin') {
         window.location.href = 'index.html';
       }
     }
-
   } catch (error) {
     console.error('Fel vid kontroll av login:', error);
   }
 }
-
 // Uppdatera navigation när inloggad
 function updateNavForLoggedInUser(role) {
   const loginBtn = document.querySelector('a[href="login.html"]');
-
   if (loginBtn) {
     loginBtn.textContent = "Log Out";
     loginBtn.href = "#";
     loginBtn.addEventListener('click', logoutUser);
   }
-
   if (role === 'admin') {
     const adminBtn = document.querySelector('.admin-hidden');
     if (adminBtn) {
@@ -56,7 +45,6 @@ function updateNavForLoggedInUser(role) {
     }
   }
 }
-
 // Logga ut användare
 async function logoutUser(e) {
   e.preventDefault();
@@ -70,17 +58,13 @@ async function logoutUser(e) {
     console.error('Logout-fel:', error);
   }
 }
-
 checkLoginStatus();
-
 // Login-formulär
 if (loginForm) {
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const username = loginForm.querySelector('input[type="text"]').value;
     const password = loginForm.querySelector('input[type="password"]').value;
-
     try {
       const response = await fetch(`${API_länk}/api/login`, {
         method: 'POST',
@@ -88,9 +72,7 @@ if (loginForm) {
         credentials: 'include',
         body: JSON.stringify({ username, password })
       });
-
       const result = await response.json();
-
       if (result.loggedIn) {
         if (result.role === 'admin') {
           window.location.href = 'admin.html';
@@ -100,43 +82,32 @@ if (loginForm) {
       } else {
         alert("Login failed: " + result.message);
       }
-
     } catch (error) {
       console.error('Login-fel:', error);
     }
   });
 }
-
-
-
-
 // Registrering
 const registerForm = document.querySelector('.register-form');
-
 if (registerForm) {
   registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const email = document.getElementById('reg-email').value;
     const username = document.getElementById('reg-username').value;
     const fullName = document.getElementById('reg-fullname').value;
     const password = document.getElementById('reg-password').value;
     const confirmPassword = document.getElementById('reg-confirm-password').value;
-
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
-
     try {
       const response = await fetch(`${API_länk}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, username, fullName, password })
       });
-
       const result = await response.json();
-
       if (response.ok) {
         alert("Registration successful!");
         window.location.href = 'login.html';
@@ -149,69 +120,56 @@ if (registerForm) {
     }
   });
 }
-
-
 // ==========================================
 // SÖK, BOKA OCH VISA RUM
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    
+   
     // 1. Sökformuläret (Stoppar reload och filtrerar rum)
     const searchForm = document.getElementById('search-form');
     if (searchForm) {
         searchForm.addEventListener('submit', (e) => {
             e.preventDefault(); // Stoppar sidan från att blinka/ladda om
-
             const start = document.getElementById('search-start').value;
             const end = document.getElementById('search-end').value;
             const type = document.getElementById('search-type').value;
-
             // Kontrollera så utcheckning inte är innan incheckning
             if (new Date(start) >= new Date(end)) {
                 alert("Check-out date must be after check-in date!");
                 return;
             }
-
             getRooms(start, end, type);
         });
     }
-
     // 2. Ladda rum om på index.html
     if (document.getElementById('rooms-container')) {
         getRooms();
     }
-
     // 3. Ladda bokningar om på user.html
     if (document.getElementById('bookings-list')) {
         getUserBookings();
     }
 });
-
 async function getRooms(start = '', end = '', type = '') {
   const roomsContainer = document.getElementById('rooms-container');
   if (!roomsContainer) return;
-  
+ 
   try {
       let url = `${API_länk}/api/rooms`;
       if (start && end) {
           url += `?start=${start}&end=${end}&type=${type}`;
       }
-
       const response = await fetch(url);
       const rooms = await response.json();
-
       roomsContainer.innerHTML = ''; // Tömmer rutan
-
       if (rooms.length === 0) {
           roomsContainer.innerHTML = `<p style="text-align:center; width:100%;">No available rooms found for these dates.</p>`;
           return;
       }
-
       rooms.forEach(room => {
-          let imagePath = 'single.jpg'; 
+          let imagePath = 'single.jpg';
           if (room.type === 'Double') imagePath = 'double.jpg';
           if (room.type === 'Suite') imagePath = 'suite.jpg';
-
           const roomCard = document.createElement('article');
           roomCard.classList.add('room-card');
           roomCard.innerHTML = `
@@ -227,25 +185,21 @@ async function getRooms(start = '', end = '', type = '') {
           `;
           roomsContainer.appendChild(roomCard);
       });
-
   } catch (error) {
       console.error('Fel vid hämtning av rum:', error);
       roomsContainer.innerHTML = `<p style="text-align:center; color:red;">Kunde inte hämta rum.</p>`;
   }
 }
-
 window.bookRoom = async function(roomId) {
   const startInput = document.getElementById('search-start');
   const endInput = document.getElementById('search-end');
-  
+ 
   if (!startInput || !endInput || !startInput.value || !endInput.value) {
       alert("Please search for available dates in the panel above before booking a room!");
       return;
   }
-
   const startDate = startInput.value;
   const endDate = endInput.value;
-
   try {
       const response = await fetch(`${API_länk}/api/bookings`, {
           method: 'POST',
@@ -253,7 +207,6 @@ window.bookRoom = async function(roomId) {
           credentials: 'include',
           body: JSON.stringify({ roomId, startDate, endDate })
       });
-
       if (response.ok) {
           alert("Room successfully booked! View it on your User Page.");
           const type = document.getElementById('search-type').value;
@@ -263,7 +216,7 @@ window.bookRoom = async function(roomId) {
           const isJson = response.headers.get('content-type')?.includes('application/json');
           const data = isJson ? await response.json() : null;
           const errorMsg = data ? data.message : "You need to log in first or backend is missing.";
-          
+         
           alert("Booking failed: " + errorMsg);
           if(response.status === 401 || errorMsg.includes("log in")) window.location.href = "login.html";
       }
@@ -272,35 +225,28 @@ window.bookRoom = async function(roomId) {
       alert("Network error. Server might be restarting.");
   }
 }
-
 async function getUserBookings() {
   const listContainer = document.getElementById('bookings-list');
   if (!listContainer) return;
-
   try {
       const response = await fetch(`${API_länk}/api/user/bookings`, { credentials: 'include' });
-      
+     
       if (!response.ok) throw new Error("Ej inloggad eller serverfel");
       const bookings = await response.json();
-
       listContainer.innerHTML = ''; // Rensar "Loading your bookings..."
-
       if (bookings.length === 0) {
           listContainer.innerHTML = "<p>You have no current bookings.</p>";
           return;
       }
-
       bookings.forEach(b => {
           const card = document.createElement('article');
           card.classList.add('user-booking-card');
-          
+         
           const start = new Date(b.start_date).toLocaleDateString();
           const end = new Date(b.end_date).toLocaleDateString();
-
           let imagePath = 'single.jpg';
           if (b.type === 'Double') imagePath = 'double.jpg';
           if (b.type === 'Suite') imagePath = 'suite.jpg';
-
           card.innerHTML = `
               <div class="user-lines">
                   <div class="line-title">Room ${b.room_number}</div>
@@ -320,7 +266,6 @@ async function getUserBookings() {
       listContainer.innerHTML = "<p>Logga in för att se dina bokningar.</p>";
   }
 }
-
 window.cancelBooking = async function(bookingId) {
   if (!confirm("Are you sure you want to cancel this booking?")) return;
   try {
@@ -337,11 +282,8 @@ window.cancelBooking = async function(bookingId) {
       console.error(error);
   }
 }
-
-
 // Bildslider på hotel-info.html
 const sliderImg = document.querySelector('.slider-img');
-
 if (sliderImg) {
     const images = [
         'images/hotel/1.jpg',
@@ -352,34 +294,27 @@ if (sliderImg) {
         'images/hotel/6.jpg',
         'images/hotel/7.jpg'
     ];
-
     let currentImageIndex = 0;
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-
     function showImage() {
         sliderImg.style.backgroundImage = `url(${images[currentImageIndex]})`;
     }
-
     // Klicka på vänsterpil
     prevBtn.addEventListener('click', () => {
         currentImageIndex --;
         if (currentImageIndex < 0) currentImageIndex = images.length - 1;
         showImage();
     });
-
     //Klicka på högerpil
     nextBtn.addEventListener('click', () => {
         currentImageIndex ++;
         if (currentImageIndex >= images.length) currentImageIndex = 0;
         showImage();
     });
-
     // Visa första bilden direkt
     showImage();
-
 }
-
 // Language switch
 const translations = {
   en: {
@@ -389,7 +324,6 @@ const translations = {
     navUser: "User Page / Bookings",
     navLogin: "Log In",
     navAdmin: "Admin",
-
     // HOME
     heroWelcome: "Welcome to Hotel California",
     heroText: "Find available rooms below!",
@@ -403,7 +337,6 @@ const translations = {
     search: "Search",
     availableRooms: "Available Rooms",
     loadingRooms: "Loading Rooms...",
-
     // HOTEL INFO
     hotelTitle: "Hotel California",
     descTitle: "Description",
@@ -414,13 +347,10 @@ const translations = {
     hotelDesc4: "Whether you're here for a romantic getaway or a family vacation, Hotel California has something for everyone.",
     hotelDesc5: "If you have any questions, please don't hesitate to contact us!",
     hotelDesc6: "Contact information can be found at the bottom of the page.",
-
-
     // BOOKING CONFIRMATION
     bookingConfirmed: "Booking Confirmed ✓",
     bookingThanks: "Thank you for booking a room with us!",
     bookingSeeYou: "We will see you on",
-
     // ADMIN
     adminCurrentBookings: "Current Bookings",
     adminManageRooms: "Manage Rooms",
@@ -428,37 +358,31 @@ const translations = {
     adminAvailableRooms: "Available Rooms",
     adminBookedFor: "Booked for",
     imgText: "Image",
-
     // LOGIN
     loginInfoText: "Log in to manage your room bookings and adjust user settings",
     username: "Username",
     password: "Password",
     registerLink: "Not a user yet? Register Here",
-
     // REGISTER
     registerInfo: "Register to manage your room bookings and adjust user settings",
     email: "E-Mail",
     fullName: "Full Name",
     repeatPassword: "Repeat Password",
     registerBtn: "Register",
-
     // SEARCH
     resultsTitle: "Results for search",
-
     // USER
     userMyBookings: "My Bookings",
     userSettings: "User Settings",
     userWelcome: "Welcome back",
     userBookingsTitle: "Your Bookings",
     cancelBooking: "Cancel Booking",
-
     // FOOTER
     contactInfo: "Contact Information",
     address: "Address",
     open24: "Reception Open 24 Hours",
     copyright: "Copyright"
   },
-
   sv: {
     // NAV
     navFind: "Hitta ett rum",
@@ -466,7 +390,6 @@ const translations = {
     navUser: "Användarsida / Bokningar",
     navLogin: "Logga in",
     navAdmin: "Admin",
-
     // HOME
     heroWelcome: "Välkommen till Hotel California",
     heroText: "Hitta lediga rum nedan!",
@@ -480,7 +403,6 @@ const translations = {
     search: "Sök",
     availableRooms: "Tillgängliga rum",
     loadingRooms: "Laddar rum...",
-
     // HOTEL INFO
     hotelTitle: "Hotel California",
     descTitle: "Beskrivning",
@@ -491,13 +413,10 @@ const translations = {
     hotelDesc4: "Oavsett om du är här för en romantisk resa eller familjesemester har Hotel California något för alla.",
     hotelDesc5: "Om du har några frågor, tveka inte att kontakta oss!",
     hotelDesc6: "Kontaktinformation finns längst ner på sidan.",
-
-
     // BOOKING
     bookingConfirmed: "Bokning bekräftad ✓",
     bookingThanks: "Tack för din bokning!",
     bookingSeeYou: "Vi ses",
-
     // ADMIN
     adminCurrentBookings: "Aktuella bokningar",
     adminManageRooms: "Hantera rum",
@@ -505,30 +424,25 @@ const translations = {
     adminAvailableRooms: "Lediga rum",
     adminBookedFor: "Bokad för",
     imgText: "Bild",
-
     // LOGIN
     loginInfoText: "Logga in för att hantera dina bokningar och inställningar",
     username: "Användarnamn",
     password: "Lösenord",
     registerLink: "Inte användare än? Registrera här",
-
     // REGISTER
     registerInfo: "Registrera dig för att hantera dina bokningar",
     email: "E-post",
     fullName: "Fullständigt namn",
     repeatPassword: "Upprepa lösenord",
     registerBtn: "Registrera",
-
     // SEARCH
     resultsTitle: "Sökresultat",
-
     // USER
     userMyBookings: "Mina bokningar",
     userSettings: "Användarinställningar",
     userWelcome: "Välkommen tillbaka",
     userBookingsTitle: "Dina bokningar",
     cancelBooking: "Avboka",
-
     // FOOTER
     contactInfo: "Kontaktinformation",
     address: "Adress",
@@ -536,7 +450,6 @@ const translations = {
     copyright: "Copyright"
   }
 };
-
 function setLanguage(lang){
   document.querySelectorAll("[data-i18n]").forEach(el => {
     const key = el.getAttribute("data-i18n");
@@ -544,19 +457,15 @@ function setLanguage(lang){
       el.textContent = translations[lang][key];
     }
   });
-
   localStorage.setItem("lang", lang);
-
   const btn = document.getElementById("langBtn");
   if(btn){
     btn.textContent = lang.toUpperCase();
   }
 }
-
 document.addEventListener("DOMContentLoaded", () => {
   const savedLang = localStorage.getItem("lang") || "en";
   setLanguage(savedLang);
-
   const btn = document.getElementById("langBtn");
   if(btn){
     btn.addEventListener("click", (e) => {
@@ -567,33 +476,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-
 // Visa användarinställningar
 function showSettings(){
   document.getElementById("bookings-section").style.display = "none";
   document.getElementById("user-settings").style.display = "block";
 }
-
 // visa bokningar
-
 function showBookings(){
   document.getElementById("bookings-section").style.display = "block";
   document.getElementById("user-settings").style.display = "none";
 }
-
-
 // Save user settingss
 const saveBtn = document.getElementById("save-user-settings");
-
 if (saveBtn) {
-
   saveBtn.addEventListener("click", async () => {
-
     const email = document.getElementById("user-email").value;
     const password = document.getElementById("user-password").value;
-
     try {
-
       const response = await fetch(`${API_länk}/api/update-user`, {
         method: "PUT",
         headers: {
@@ -605,53 +504,39 @@ if (saveBtn) {
           password: password
         })
       });
-
       const result = await response.json();
-
       if (response.ok) {
         document.getElementById("settings-message").textContent = "Settings updated successfully!";
       } else {
         alert("Error: " + result.message);
       }
-
     } catch (error) {
-
       console.error(error);
       alert("Something went wrong");
-
     }
-
   });
-
 }
-
-
 async function getUserBookings() {
   const bookingsContainer = document.querySelector('#bookings-section');
   if (!bookingsContainer) return;
-
   try {
       const response = await fetch(`${API_länk}/api/user/bookings`, { credentials: 'include' });
       const bookings = await response.json();
-
       // rensa gamla bokningskort
       const welcomeHtml = bookingsContainer.querySelector('.user-welcome').outerHTML;
       const titleHtml = bookingsContainer.querySelector('.user-title').outerHTML;
       bookingsContainer.innerHTML = welcomeHtml + titleHtml;
-
       if (bookings.length === 0) {
           bookingsContainer.innerHTML += "<p>Du har inga aktiva bokningar.</p>";
           return;
       }
-
       bookings.forEach(b => {
           const card = document.createElement('article');
           card.classList.add('user-booking-card');
-          
+         
           // Formatera datum snyggt
           const start = new Date(b.start_date).toLocaleDateString();
           const end = new Date(b.end_date).toLocaleDateString();
-
           card.innerHTML = `
               <div class="user-lines">
                   <div class="line-title">Room ${b.room_number}</div>
@@ -670,8 +555,116 @@ async function getUserBookings() {
       console.error("Kunde inte hämta bokningar:", error);
   }
 }
-
 // Kör hämta bokningar om på user.html
 if (window.location.pathname.includes('user.html')) {
   getUserBookings();
+}
+
+// Kör funktionen om vi är på admin-sidan
+if(window.location.pathname.includes("admin.html")){
+ loadAdminBookings();
+}
+// Ta bort en bokning från admin-sidan
+async function adminCancelBooking(id){
+ if(!confirm("Cancel this booking?")) return;
+ await fetch(`${API_länk}/api/bookings/${id}`,{
+  method:"DELETE",
+  credentials:"include"
+ });
+ loadAdminBookings();
+}
+// Ladda alla rum i admin-sidan
+async function loadAdminRooms(){
+  const container = document.querySelector(".admin-rooms");
+  if(!container) return;
+  const response = await fetch(`${API_länk}/api/rooms`);
+  const rooms = await response.json();
+ 
+  container.innerHTML = "";
+  rooms.forEach(room => {
+  const card = document.createElement("div");
+  card.innerHTML = `
+  <div style="border:1px solid #555;padding:15px;margin:10px;">
+  Room ${room.room_number}
+  <br>
+  Type: ${room.type}
+  <br>
+  Price: ${room.price_per_night} kr
+  <br><br>
+  <button class="delete-btn" onclick="deleteRoom(${room.id})">
+  Delete Room
+  </button>
+  </div>
+  `;
+  container.appendChild(card);
+ });
+}
+// Ta bort ett rum från admin-sidan
+async function deleteRoom(id){
+ if(!confirm("Delete this room?")) return;
+ await fetch(`${API_länk}/api/admin/rooms/${id}`,{
+  method:"DELETE",
+  credentials:"include"
+ });
+ loadAdminRooms();
+}
+// Lägg till ett nytt rum (admin)
+async function addRoom(){
+ const number = document.getElementById("room-number").value;
+ const type = document.getElementById("room-type").value;
+ const price = document.getElementById("room-price").value;
+ if(!number || !type || !price){
+  alert("Fill all fields");
+  return;
+ }
+ await fetch(`${API_länk}/api/admin/rooms`,{
+  method:"POST",
+  headers:{
+   "Content-Type":"application/json"
+  },
+  credentials:"include",
+  body:JSON.stringify({
+   room_number:number,
+   type:type,
+   price_per_night:price
+  })
+ });
+ loadAdminRooms();
+}
+function showAdminBookings(){
+ document.getElementById("admin-bookings").style.display="block";
+ document.getElementById("admin-rooms").style.display="none";
+}
+function showAdminRooms(){
+ document.getElementById("admin-bookings").style.display="none";
+ document.getElementById("admin-rooms").style.display="block";
+ loadAdminRooms();
+}
+async function loadAdminBookings(){
+ const res = await fetch(API_länk + "/api/admin/bookings",{
+  credentials:"include"
+ });
+ const bookings = await res.json();
+ const container = document.querySelector("#admin-bookings .admin-cards");
+ container.innerHTML = "";
+ bookings.forEach(b => {
+  container.innerHTML += `
+  <div class="admin-card">
+   <h3>Room ${b.room_number}</h3>
+   <p>User: ${b.username}</p>
+   <p>${b.start_date} → ${b.end_date}</p>
+  </div>
+  `;
+ });
+ document.getElementById("total-bookings").innerText = bookings.length;
+}
+async function loadAdminStats(){
+ const res = await fetch(API_länk + "/api/admin/stats",{credentials:"include"});
+ const data = await res.json();
+ document.getElementById("total-bookings").innerText = data.bookings;
+ document.getElementById("available-rooms").innerText = data.rooms;
+}
+if(window.location.pathname.includes("admin.html")){
+ loadAdminStats();
+ loadAdminRooms();
 }
