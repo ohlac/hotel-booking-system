@@ -613,6 +613,7 @@ async function addRoom(){
  const number = document.getElementById("room-number").value;
  const type = document.getElementById("room-type").value;
  const price = document.getElementById("room-price").value;
+ const description = document.getElementById("room-description").value;
  if(!number || !type || !price){
   alert("Fill all fields");
   return;
@@ -626,8 +627,10 @@ async function addRoom(){
   body:JSON.stringify({
    room_number:number,
    type:type,
-   price_per_night:price
+   price_per_night:price,
+   description:description
   })
+
  });
  loadAdminRooms();
 }

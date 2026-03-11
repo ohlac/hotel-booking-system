@@ -144,23 +144,6 @@ app.get('/api/user/bookings', async (req, res) => {
 });
 
 
-// API för att lägga till ett rum (ADMIN)
-app.post('/api/admin/rooms', async (req,res)=>{
-
- if(!req.session.user || req.session.user.role !== 'admin'){
-  return res.status(403).json({message:"Admin only"});
- }
-
- const {room_number,type,price_per_night} = req.body;
-
- await pool.promise().query(
- "INSERT INTO rooms (room_number,type,price_per_night) VALUES (?,?,?)",
- [room_number,type,price_per_night]
- );
-
- res.json({message:"Room added"});
-
-});
 
 // Avboka ett rum (Ta bort bokning)
 app.delete('/api/bookings/:id', async (req, res) => {
@@ -304,6 +287,7 @@ app.get('/api/admin/stats', async (req,res)=>{
 
 });
 
+
 // API för att lägga till ett rum (ADMIN)
 app.post('/api/admin/rooms', async (req,res)=>{
 
@@ -311,15 +295,14 @@ app.post('/api/admin/rooms', async (req,res)=>{
   return res.status(403).json({message:"Admin only"});
  }
 
- const {room_number,type,price_per_night} = req.body;
+ const {room_number,type,price_per_night,description} = req.body;
 
  await pool.promise().query(
- "INSERT INTO rooms (room_number,type,price_per_night) VALUES (?,?,?)",
- [room_number,type,price_per_night]
+ "INSERT INTO rooms (room_number,type,price_per_night,description) VALUES (?,?,?,?)",
+ [room_number,type,price_per_night,description]
  );
 
  res.json({message:"Room added"});
+
 });
-
-
 
