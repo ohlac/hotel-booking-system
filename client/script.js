@@ -585,7 +585,7 @@ async function loadAdminRooms(){
   const card = document.createElement("div");
   card.innerHTML = `
   <div style="border:1px solid #555;padding:15px;margin:10px;">
-  Room ${room.room_number}
+  Room ${room.room_number} - ${room.status}
   <br>
   Type: ${room.type}
   <br>
@@ -614,10 +614,12 @@ async function addRoom(){
  const type = document.getElementById("room-type").value;
  const price = document.getElementById("room-price").value;
  const description = document.getElementById("room-description").value;
+
  if(!number || !type || !price){
   alert("Fill all fields");
   return;
  }
+
  await fetch(`${API_länk}/api/admin/rooms`,{
   method:"POST",
   headers:{
@@ -630,9 +632,7 @@ async function addRoom(){
    price_per_night:price,
    description:description
   })
-
  });
- loadAdminRooms();
 }
 function showAdminBookings(){
  document.getElementById("admin-bookings").style.display="block";

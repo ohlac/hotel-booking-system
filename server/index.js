@@ -66,7 +66,18 @@ app.get('/', (req, res) => {
 app.get('/api/rooms', async (req, res) => {
     const { start, end, type } = req.query;
     try {
-        let sql = "SELECT * FROM rooms";
+        let sql = `
+        SELECT r.*, 
+        CASE 
+        WHEN EXISTS (
+        SELECT 1 FROM bookings b 
+        WHERE b.room_id = r.id
+        ) THEN 'Booked'
+         ELSE 'Available'
+         END AS status
+         FROM rooms r
+         `;
+
         const params = [];
 
         if (start && end) {
