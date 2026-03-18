@@ -124,32 +124,60 @@ if (registerForm) {
 // SÖK, BOKA OCH VISA RUM
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-   
-    // 1. Sökformuläret (Stoppar reload och filtrerar rum)
-    const searchForm = document.getElementById('search-form');
-    if (searchForm) {
-        searchForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // Stoppar sidan från att blinka/ladda om
-            const start = document.getElementById('search-start').value;
-            const end = document.getElementById('search-end').value;
-            const type = document.getElementById('search-type').value;
-            // Kontrollera så utcheckning inte är innan incheckning
-            if (new Date(start) >= new Date(end)) {
-                alert("Check-out date must be after check-in date!");
-                return;
-            }
-            getRooms(start, end, type);
-        });
-    }
-    // 2. Ladda rum om på index.html
-    if (document.getElementById('rooms-container')) {
-        getRooms();
-    }
-    // 3. Ladda bokningar om på user.html
-    if (document.getElementById('bookings-list')) {
-        getUserBookings();
-    }
+  const searchForm = document.getElementById('search-form');
+  const roomsContainer = document.getElementById('rooms-container');
+  const savedSearch = JSON.parse(localStorage.getItem('lastRoomSearch') || 'null');
+
+  if (searchForm) {
+      if (savedSearch && savedSearch.start && savedSearch.end) {
+          document.getElementById('search-start').value = savedSearch.start;
+          document.getElementById('search-end').value = savedSearch.end;
+          document.getElementById('search-type').value = savedSearch.type || 'Any';
+          getRooms(savedSearch.start, savedSearch.end, savedSearch.type || 'Any');
+      } else if (roomsContainer) {
+          getRooms();
+      }
+
+      searchForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+
+          const start = document.getElementById('search-start').value;
+          const end = document.getElementById('search-end').value;
+          const type = document.getElementById('search-type').value;
+
+          if (new Date(start) >= new Date(end)) {
+              alert("Check-out date must be after check-in date!");
+              return;
+          }
+
+          localStorage.setItem('lastRoomSearch', JSON.stringify({
+              start,
+              end,
+              type
+          }));
+
+          getRooms(start, end, type);
+      });
+  } else if (roomsContainer) {
+      getRooms();
+  }
+
+  if (document.getElementById('bookings-list')) {
+      getUserBookings();
+  }
+
+  if (window.location.pathname.includes('booking.html')) {
+      confirmStripeBooking();
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('payment') === 'cancelled') {
+      alert("Payment was cancelled. No booking was created.");
+  }
 });
+
+
+
 async function getRooms(start = '', end = '', type = '') {
   const roomsContainer = document.getElementById('rooms-container');
   if (!roomsContainer) return;
@@ -190,82 +218,118 @@ async function getRooms(start = '', end = '', type = '') {
       roomsContainer.innerHTML = `<p style="text-align:center; color:red;">Kunde inte hämta rum.</p>`;
   }
 }
+
+
+
 window.bookRoom = async function(roomId) {
   const startInput = document.getElementById('search-start');
   const endInput = document.getElementById('search-end');
- 
+  const typeInput = document.getElementById('search-type');
+
   if (!startInput || !endInput || !startInput.value || !endInput.value) {
       alert("Please search for available dates in the panel above before booking a room!");
       return;
   }
+
   const startDate = startInput.value;
   const endDate = endInput.value;
+  const type = typeInput ? typeInput.value : 'Any';
+
+  if (startDate >= endDate) {
+      alert("Check-out date must be after check-in date.");
+      return;
+  }
+
+  localStorage.setItem('lastRoomSearch', JSON.stringify({
+      start: startDate,
+      end: endDate,
+      type: type
+  }));
+
   try {
-      const response = await fetch(`${API_länk}/api/bookings`, {
+      const response = await fetch(`${API_länk}/api/create-checkout-session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ roomId, startDate, endDate })
       });
-      if (response.ok) {
-          alert("Room successfully booked! View it on your User Page.");
-          const type = document.getElementById('search-type').value;
-          getRooms(startDate, endDate, type); // Laddar om listan så rummet försvinner
-      } else {
-          // Skydd mot "Unexpected token <" om Render svarar med en felsida
-          const isJson = response.headers.get('content-type')?.includes('application/json');
-          const data = isJson ? await response.json() : null;
-          const errorMsg = data ? data.message : "You need to log in first or backend is missing.";
-         
-          alert("Booking failed: " + errorMsg);
-          if(response.status === 401 || errorMsg.includes("log in")) window.location.href = "login.html";
-      }
-  } catch (error) {
-      console.error("Bokningsfel:", error);
-      alert("Network error. Server might be restarting.");
-  }
-}
-async function getUserBookings() {
-  const listContainer = document.getElementById('bookings-list');
-  if (!listContainer) return;
-  try {
-      const response = await fetch(`${API_länk}/api/user/bookings`, { credentials: 'include' });
-     
-      if (!response.ok) throw new Error("Ej inloggad eller serverfel");
-      const bookings = await response.json();
-      listContainer.innerHTML = ''; // Rensar "Loading your bookings..."
-      if (bookings.length === 0) {
-          listContainer.innerHTML = "<p>You have no current bookings.</p>";
+
+      const data = await response.json();
+
+      if (!response.ok) {
+          alert(data.message || "Could not start payment.");
+          if (response.status === 401) {
+              window.location.href = "login.html";
+          }
           return;
       }
-      bookings.forEach(b => {
-          const card = document.createElement('article');
-          card.classList.add('user-booking-card');
-         
-          const start = new Date(b.start_date).toLocaleDateString();
-          const end = new Date(b.end_date).toLocaleDateString();
-          let imagePath = 'single.jpg';
-          if (b.type === 'Double') imagePath = 'double.jpg';
-          if (b.type === 'Suite') imagePath = 'suite.jpg';
-          card.innerHTML = `
-              <div class="user-lines">
-                  <div class="line-title">Room ${b.room_number}</div>
-                  <div class="line">Type: ${b.type}</div>
-                  <div class="line">Start Date: ${start}</div>
-              </div>
-              <div class="user-dates">
-                  <div class="end-date">End Date: ${end}</div>
-                  <button class="cancel-btn" onclick="cancelBooking(${b.booking_id})">Cancel Booking</button>
-              </div>
-              <div class="user-img" style="background-image: url('images/rooms/${imagePath}'); background-size: cover; background-position: center;"></div>
-          `;
-          listContainer.appendChild(card);
-      });
+
+      if (data.url) {
+          window.location.href = data.url;
+      } else {
+          alert("Could not load payment page.");
+      }
+
   } catch (error) {
-      console.error("Fel vid hämtning:", error);
-      listContainer.innerHTML = "<p>Logga in för att se dina bokningar.</p>";
+      console.error("Booking/payment error:", error);
+      alert("Something went wrong while starting payment.");
+  }
+};
+
+
+
+async function confirmStripeBooking() {
+  const title = document.getElementById('payment-title');
+  const message = document.getElementById('booking-message');
+  const dates = document.getElementById('booking-dates');
+  const bookingIdText = document.getElementById('booking-id-text');
+
+  if (!title || !message || !dates || !bookingIdText) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session_id');
+
+  if (!sessionId) {
+      title.textContent = "Missing payment session";
+      message.textContent = "No Stripe session ID was found in the URL.";
+      dates.textContent = "";
+      bookingIdText.textContent = "";
+      return;
+  }
+
+  try {
+      const response = await fetch(
+          `${API_länk}/api/confirm-booking?session_id=${encodeURIComponent(sessionId)}`,
+          { credentials: 'include' }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+          title.textContent = "Payment received, but booking could not be confirmed";
+          message.textContent = data.message || "Something went wrong while confirming your booking.";
+          dates.textContent = "";
+          bookingIdText.textContent = "";
+          return;
+      }
+
+      const formattedStart = new Date(data.startDate).toLocaleDateString();
+      const formattedEnd = new Date(data.endDate).toLocaleDateString();
+
+      title.textContent = "Payment successful ✓";
+      message.textContent = "Your booking has been confirmed and saved.";
+      dates.innerHTML = `Room <strong>${data.roomNumber}</strong> (${data.roomType}) from <strong>${formattedStart}</strong> to <strong>${formattedEnd}</strong>.`;
+      bookingIdText.innerHTML = `Booking ID: <strong>#${data.bookingId}</strong>`;
+  } catch (error) {
+      console.error("Error confirming Stripe booking:", error);
+      title.textContent = "Could not confirm booking";
+      message.textContent = "A server error occurred while confirming your booking.";
+      dates.textContent = "";
+      bookingIdText.textContent = "";
   }
 }
+
+
 window.cancelBooking = async function(bookingId) {
   if (!confirm("Are you sure you want to cancel this booking?")) return;
   try {
@@ -564,15 +628,41 @@ if (window.location.pathname.includes('user.html')) {
 if(window.location.pathname.includes("admin.html")){
  loadAdminBookings();
 }
+
 // Ta bort en bokning från admin-sidan
-async function adminCancelBooking(id){
- if(!confirm("Cancel this booking?")) return;
- await fetch(`${API_länk}/api/bookings/${id}`,{
-  method:"DELETE",
-  credentials:"include"
- });
- loadAdminBookings();
+async function adminCancelBooking(id) {
+  if (!confirm("Cancel this booking?")) return;
+
+  try {
+    const response = await fetch(`${API_länk}/api/admin/bookings/${id}`, {
+      method: "DELETE",
+      credentials: "include"
+    });
+
+    const contentType = response.headers.get("content-type") || "";
+    let data = {};
+
+    if (contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      data = { message: text || "Could not cancel booking." };
+    }
+
+    if (!response.ok) {
+      alert(data.message || "Could not cancel booking.");
+      return;
+    }
+
+    alert("Booking cancelled.");
+    loadAdminBookings();
+    loadAdminStats();
+  } catch (error) {
+    console.error("Admin cancel booking error:", error);
+    alert("Something went wrong while cancelling the booking.");
+  }
 }
+
 // Ladda alla rum i admin-sidan
 async function loadAdminRooms(){
   const container = document.querySelector(".admin-rooms");
@@ -648,24 +738,65 @@ function showAdminRooms(){
  document.getElementById("admin-rooms").style.display="block";
  loadAdminRooms();
 }
-async function loadAdminBookings(){
- const res = await fetch(API_länk + "/api/admin/bookings",{
-  credentials:"include"
- });
- const bookings = await res.json();
- const container = document.querySelector("#admin-bookings .admin-cards");
- container.innerHTML = "";
- bookings.forEach(b => {
-  container.innerHTML += `
-  <div class="admin-card">
-   <h3>Room ${b.room_number}</h3>
-   <p>User: ${b.username}</p>
-   <p>${b.start_date} → ${b.end_date}</p>
-  </div>
-  `;
- });
- document.getElementById("total-bookings").innerText = bookings.length;
+
+
+
+async function loadAdminBookings() {
+  try {
+    const res = await fetch(`${API_länk}/api/admin/bookings`, {
+      credentials: "include"
+    });
+
+    const contentType = res.headers.get("content-type") || "";
+    let bookings = [];
+
+    if (contentType.includes("application/json")) {
+      bookings = await res.json();
+    } else {
+      const text = await res.text();
+      throw new Error(text || "Could not load admin bookings.");
+    }
+
+    const container = document.querySelector("#admin-bookings .admin-cards");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (!Array.isArray(bookings) || bookings.length === 0) {
+      container.innerHTML = `<p>No current bookings found.</p>`;
+      document.getElementById("total-bookings").innerText = 0;
+      return;
+    }
+
+    bookings.forEach(b => {
+      const start = new Date(b.start_date).toLocaleDateString();
+      const end = new Date(b.end_date).toLocaleDateString();
+
+      container.innerHTML += `
+        <div class="admin-card">
+          <h3>Room ${b.room_number}</h3>
+          <p>User: ${b.username}</p>
+          <p>Type: ${b.type}</p>
+          <p>${start} → ${end}</p>
+          <button class="cancel-btn" onclick="adminCancelBooking(${b.id})">
+            Cancel Booking
+          </button>
+        </div>
+      `;
+    });
+
+    document.getElementById("total-bookings").innerText = bookings.length;
+  } catch (error) {
+    console.error("Could not load admin bookings:", error);
+    const container = document.querySelector("#admin-bookings .admin-cards");
+    if (container) {
+      container.innerHTML = `<p style="color:red;">Could not load admin bookings.</p>`;
+    }
+  }
 }
+
+
+
 async function loadAdminStats(){
  const res = await fetch(API_länk + "/api/admin/stats",{credentials:"include"});
  const data = await res.json();

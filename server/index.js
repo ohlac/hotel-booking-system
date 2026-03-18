@@ -4,6 +4,7 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const session = require('express-session');
 const app = express();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 
 app.set('trust proxy', 1);
@@ -26,9 +27,9 @@ const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER
 
 app.use(session({
     name: 'hotel_session', // namnet på cookie som lagrar sessionen
-    secret: 'hemligthotel0', // lösenord för sessionen.
+    secret: process.env.SESSION_SECRET ||'dev-only-secret', // lösenord för sessionen.
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     proxy: true,
     cookie: { 
         secure: isProduction ? true : false, // Endast över HTTPS i produktion
@@ -105,19 +106,173 @@ app.get('/api/rooms', async (req, res) => {
 });
 
 // Skapa ny bokning
-app.post('/api/bookings', async (req, res) => {
-    if (!req.session.user) return res.status(401).json({ message: "You need to log in first." });
-    
+app.post('/api/create-checkout-session', async (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ message: "You need to log in first." });
+    }
+
     const { roomId, startDate, endDate } = req.body;
-    const userId = req.session.user.id;
-    
-    try { 
-        const sql = "INSERT INTO bookings (user_id, room_id, start_date, end_date) VALUES (?, ?, ?, ?)";
-        await pool.promise().query(sql, [userId, roomId, startDate, endDate]);
-        res.status(201).json({ message: "Booking created successfully" });
+
+    if (!roomId || !startDate || !endDate) {
+        return res.status(400).json({ message: "roomId, startDate and endDate are required." });
+    }
+
+    if (startDate >= endDate) {
+        return res.status(400).json({ message: "End date must be after start date." });
+    }
+
+    try {
+        const [roomRows] = await pool.promise().query(
+            `SELECT id, room_number, type, price_per_night
+             FROM rooms
+             WHERE id = ?
+             LIMIT 1`,
+            [roomId]
+        );
+
+        if (roomRows.length === 0) {
+            return res.status(404).json({ message: "Room not found." });
+        }
+
+        const room = roomRows[0];
+
+        const [conflicts] = await pool.promise().query(
+            `SELECT id
+             FROM bookings
+             WHERE room_id = ?
+               AND start_date < ?
+               AND end_date > ?
+             LIMIT 1`,
+            [roomId, endDate, startDate]
+        );
+
+        if (conflicts.length > 0) {
+            return res.status(409).json({ message: "This room is no longer available for those dates." });
+        }
+
+        const millisecondsPerDay = 1000 * 60 * 60 * 24;
+        const nights = Math.round((new Date(endDate) - new Date(startDate)) / millisecondsPerDay);
+
+        if (nights <= 0) {
+            return res.status(400).json({ message: "Invalid number of nights." });
+        }
+
+        const totalAmount = Math.round(Number(room.price_per_night) * nights * 100);
+        const frontendUrl = process.env.FRONTEND_URL || 'http://127.0.0.1:5500';
+
+        const checkoutSession = await stripe.checkout.sessions.create({
+            mode: 'payment',
+            line_items: [
+                {
+                    price_data: {
+                        currency: 'sek',
+                        product_data: {
+                            name: `Room ${room.room_number} - ${room.type}`,
+                            description: `${startDate} to ${endDate} (${nights} night${nights > 1 ? 's' : ''})`
+                        },
+                        unit_amount: totalAmount
+                    },
+                    quantity: 1
+                }
+            ],
+            success_url: `${frontendUrl}/booking.html?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${frontendUrl}/index.html?payment=cancelled`,
+            metadata: {
+                userId: String(req.session.user.id),
+                roomId: String(room.id),
+                roomNumber: String(room.room_number),
+                roomType: room.type,
+                startDate,
+                endDate
+            }
+        });
+
+        res.json({ url: checkoutSession.url });
     } catch (error) {
-        console.error("Fel vid bokning:", error);
-        res.status(500).json({ message: "Could not book room" });
+        console.error("Error creating Stripe Checkout Session:", error);
+        res.status(500).json({ message: "Could not create payment session." });
+    }
+});
+
+app.get('/api/confirm-booking', async (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ message: "You need to log in first." });
+    }
+
+    const { session_id } = req.query;
+
+    if (!session_id) {
+        return res.status(400).json({ message: "Missing session_id." });
+    }
+
+    try {
+        const checkoutSession = await stripe.checkout.sessions.retrieve(session_id);
+
+        if (!checkoutSession || checkoutSession.payment_status !== 'paid') {
+            return res.status(400).json({ message: "Payment is not completed." });
+        }
+
+        if (!checkoutSession.metadata || checkoutSession.metadata.userId !== String(req.session.user.id)) {
+            return res.status(403).json({ message: "This payment does not belong to the logged-in user." });
+        }
+
+        const { roomId, roomNumber, roomType, startDate, endDate } = checkoutSession.metadata;
+
+        const [existingBooking] = await pool.promise().query(
+            `SELECT id
+             FROM bookings
+             WHERE user_id = ?
+               AND room_id = ?
+               AND start_date = ?
+               AND end_date = ?
+             LIMIT 1`,
+            [req.session.user.id, roomId, startDate, endDate]
+        );
+
+        if (existingBooking.length > 0) {
+            return res.json({
+                message: "Booking already confirmed.",
+                bookingId: existingBooking[0].id,
+                roomNumber,
+                roomType,
+                startDate,
+                endDate
+            });
+        }
+
+        const [conflicts] = await pool.promise().query(
+            `SELECT id
+             FROM bookings
+             WHERE room_id = ?
+               AND start_date < ?
+               AND end_date > ?
+             LIMIT 1`,
+            [roomId, endDate, startDate]
+        );
+
+        if (conflicts.length > 0) {
+            return res.status(409).json({
+                message: "Payment succeeded, but the room was booked before confirmation. For a real project, solve this with webhooks and a reservation-hold system."
+            });
+        }
+
+        const [result] = await pool.promise().query(
+            `INSERT INTO bookings (user_id, room_id, start_date, end_date)
+             VALUES (?, ?, ?, ?)`,
+            [req.session.user.id, roomId, startDate, endDate]
+        );
+
+        res.json({
+            message: "Booking confirmed successfully.",
+            bookingId: result.insertId,
+            roomNumber,
+            roomType,
+            startDate,
+            endDate
+        });
+    } catch (error) {
+        console.error("Error confirming booking after payment:", error);
+        res.status(500).json({ message: "Could not confirm booking." });
     }
 });
 
@@ -169,6 +324,22 @@ app.delete('/api/bookings/:id', async (req, res) => {
         res.status(500).json({ message: "Could not cancel booking" });
     }
 });
+
+// Avboka en bokning (endast admin)
+app.delete('/api/admin/bookings/:id', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin only" });
+    }
+
+    try {
+        await pool.promise().query('DELETE FROM bookings WHERE id = ?', [req.params.id]);
+        res.json({ message: "Booking cancelled by admin" });
+    } catch (error) {
+        res.status(500).json({ message: "Could not cancel booking" });
+    }
+});
+
+
 
 // Registrera
 app.post('/api/register', async (req, res) => {
@@ -265,7 +436,8 @@ app.get('/api/admin/bookings', async (req,res)=>{
  FROM bookings b
  JOIN users u ON b.user_id = u.id
  JOIN rooms r ON b.room_id = r.id
- `;
+ ORDER BY b.start_date ASC
+`;
  const [rows] = await pool.promise().query(sql);
  res.json(rows);
 
@@ -288,14 +460,18 @@ app.delete('/api/admin/rooms/:id', async (req,res)=>{
 });
 
 app.get('/api/admin/stats', async (req,res)=>{
- const [rooms] = await pool.promise().query("SELECT COUNT(*) as total FROM rooms");
- const [bookings] = await pool.promise().query("SELECT COUNT(*) as total FROM bookings");
- res.json({
-  rooms: rooms[0].total,
-  bookings: bookings[0].total
- });
-
-});
+    if(!req.session.user || req.session.user.role !== 'admin'){
+     return res.status(403).json({message:"Admin only"});
+    }
+   
+    const [rooms] = await pool.promise().query("SELECT COUNT(*) as total FROM rooms");
+    const [bookings] = await pool.promise().query("SELECT COUNT(*) as total FROM bookings");
+   
+    res.json({
+     rooms: rooms[0].total,
+     bookings: bookings[0].total
+    });
+   });
 
 
 // API för att lägga till ett rum (ADMIN)

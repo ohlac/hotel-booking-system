@@ -84,19 +84,22 @@
 
       <section class="booking-center">
         <div class="confirmation-box">
-          <h2 class="confirm-title" data-i18n="bookingConfirmed">
-            Booking Confirmed ✓
+          <h2 class="confirm-title" id="payment-title">
+            Processing payment...
           </h2>
-
-          <p data-i18n="bookingThanks">
-            Thank you for booking a room with us, <strong>[User]</strong>!<br>
-            Your booking ID is <strong>#000</strong>
+      
+          <p id="booking-message">
+            Please wait while we confirm your booking.
           </p>
-
-          <p class="confirm-date" data-i18n="bookingSeeYou">
-            We will see you on <strong>[Start Date]</strong>!
-          </p>
-
+      
+          <p class="confirm-date" id="booking-dates"></p>
+      
+          <p id="booking-id-text"></p>
+      
+          <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:20px;">
+            <a href="user.html" class="search-btn">Go to My Bookings</a>
+            <a href="index.html" class="search-btn">Back to Room Search</a>
+          </div>
         </div>
       </section>
 
