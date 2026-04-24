@@ -6,6 +6,13 @@ const session = require('express-session');
 const app = express();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
+const {
+    sendRegistrationEmail,
+    sendBookingConfirmedEmail,
+    sendBookingCancelledEmail,
+    sendUserUpdatedEmail
+} = require('./email');
+
 
 app.set('trust proxy', 1);
 
@@ -261,7 +268,27 @@ app.get('/api/confirm-booking', async (req, res) => {
              VALUES (?, ?, ?, ?)`,
             [req.session.user.id, roomId, startDate, endDate]
         );
-
+        
+        const [userRows] = await pool.promise().query(
+            `SELECT email, full_name
+             FROM users
+             WHERE id = ?
+             LIMIT 1`,
+            [req.session.user.id]
+        );
+        
+        if (userRows.length > 0) {
+            await sendBookingConfirmedEmail({
+                to: userRows[0].email,
+                fullName: userRows[0].full_name,
+                bookingId: result.insertId,
+                roomNumber,
+                roomType,
+                startDate,
+                endDate
+            });
+        }
+        
         res.json({
             message: "Booking confirmed successfully.",
             bookingId: result.insertId,
@@ -312,15 +339,59 @@ app.get('/api/user/bookings', async (req, res) => {
 
 // Avboka ett rum (Ta bort bokning)
 app.delete('/api/bookings/:id', async (req, res) => {
-    if (!req.session.user) return res.status(401).json({ message: "Not logged in" });
-    
+    if (!req.session.user) {
+        return res.status(401).json({ message: "Not logged in" });
+    }
+
     try {
         const bookingId = req.params.id;
         const userId = req.session.user.id;
-        // userId används i villkoret så att man bara kan radera sina egna bokningar
-        await pool.promise().query('DELETE FROM bookings WHERE id = ? AND user_id = ?', [bookingId, userId]);
+
+        const [bookingRows] = await pool.promise().query(
+            `SELECT 
+                b.id AS booking_id,
+                b.start_date,
+                b.end_date,
+                r.room_number,
+                r.type,
+                u.email,
+                u.full_name
+             FROM bookings b
+             JOIN rooms r ON b.room_id = r.id
+             JOIN users u ON b.user_id = u.id
+             WHERE b.id = ? AND b.user_id = ?
+             LIMIT 1`,
+            [bookingId, userId]
+        );
+
+        if (bookingRows.length === 0) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        const booking = bookingRows[0];
+
+        const [deleteResult] = await pool.promise().query(
+            'DELETE FROM bookings WHERE id = ? AND user_id = ?',
+            [bookingId, userId]
+        );
+
+        if (deleteResult.affectedRows === 0) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        await sendBookingCancelledEmail({
+            to: booking.email,
+            fullName: booking.full_name,
+            bookingId: booking.booking_id,
+            roomNumber: booking.room_number,
+            roomType: booking.type,
+            startDate: booking.start_date,
+            endDate: booking.end_date
+        });
+
         res.json({ message: "Booking cancelled" });
     } catch (error) {
+        console.error("Could not cancel booking:", error);
         res.status(500).json({ message: "Could not cancel booking" });
     }
 });
@@ -332,9 +403,53 @@ app.delete('/api/admin/bookings/:id', async (req, res) => {
     }
 
     try {
-        await pool.promise().query('DELETE FROM bookings WHERE id = ?', [req.params.id]);
+        const bookingId = req.params.id;
+
+        const [bookingRows] = await pool.promise().query(
+            `SELECT 
+                b.id AS booking_id,
+                b.start_date,
+                b.end_date,
+                r.room_number,
+                r.type,
+                u.email,
+                u.full_name
+             FROM bookings b
+             JOIN rooms r ON b.room_id = r.id
+             JOIN users u ON b.user_id = u.id
+             WHERE b.id = ?
+             LIMIT 1`,
+            [bookingId]
+        );
+
+        if (bookingRows.length === 0) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        const booking = bookingRows[0];
+
+        const [deleteResult] = await pool.promise().query(
+            'DELETE FROM bookings WHERE id = ?',
+            [bookingId]
+        );
+
+        if (deleteResult.affectedRows === 0) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        await sendBookingCancelledEmail({
+            to: booking.email,
+            fullName: booking.full_name,
+            bookingId: booking.booking_id,
+            roomNumber: booking.room_number,
+            roomType: booking.type,
+            startDate: booking.start_date,
+            endDate: booking.end_date
+        });
+
         res.json({ message: "Booking cancelled by admin" });
     } catch (error) {
+        console.error("Could not cancel booking by admin:", error);
         res.status(500).json({ message: "Could not cancel booking" });
     }
 });
@@ -344,16 +459,31 @@ app.delete('/api/admin/bookings/:id', async (req, res) => {
 // Registrera
 app.post('/api/register', async (req, res) => {
     const { email, username, fullName, password } = req.body;
+
     try {
-        const [existingUser] = await pool.promise().query('SELECT * FROM users WHERE username = ? OR email = ?', [username, email]);
-        if (existingUser.length > 0) return res.status(400).json({ error: 'Username or email already exists' });
-        
+        const [existingUser] = await pool.promise().query(
+            'SELECT * FROM users WHERE username = ? OR email = ?',
+            [username, email]
+        );
+
+        if (existingUser.length > 0) {
+            return res.status(400).json({ error: 'Username or email already exists' });
+        }
+
         await pool.promise().query(
             'INSERT INTO users (email, username, full_name, password, role) VALUES (?, ?, ?, ?, ?)',
             [email, username, fullName, password, 'user']
         );
+
+        await sendRegistrationEmail({
+            email,
+            username,
+            fullName
+        });
+
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
+        console.error('Could not register user:', error);
         res.status(500).json({ error: 'Could not register user' });
     }
 });
@@ -397,23 +527,41 @@ app.post('/api/logout', (req, res) => {
     });
 });
 
-// Uppdatera användarinställningar
+// Uppdatera anvndarinstllningar
 app.put('/api/update-user', async (req, res) => {
-    if (!req.session.user) return res.status(401).json({ message: "Not logged in" });
+    if (!req.session.user) {
+        return res.status(401).json({ message: "Not logged in" });
+    }
+
     const userId = req.session.user.id;
     const { email, password } = req.body;
+
     try {
-        await pool.promise().query("UPDATE users SET email = ?, password = ? WHERE id = ?", [email, password, userId]);
+        await pool.promise().query(
+            "UPDATE users SET email = ?, password = ? WHERE id = ?",
+            [email, password, userId]
+        );
+
+        const [userRows] = await pool.promise().query(
+            `SELECT email, full_name
+             FROM users
+             WHERE id = ?
+             LIMIT 1`,
+            [userId]
+        );
+
+        if (userRows.length > 0) {
+            await sendUserUpdatedEmail({
+                to: userRows[0].email,
+                fullName: userRows[0].full_name
+            });
+        }
+
         res.json({ message: "User updated successfully" });
     } catch (error) {
+        console.error("Could not update user:", error);
         res.status(500).json({ message: "Server error" });
     }
-});
-
-// Starta servern
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Servern körs på http://localhost:${PORT}`);
 });
 
 // Hämta alla bokningar för admin-sidan
@@ -492,3 +640,8 @@ app.post('/api/admin/rooms', async (req,res)=>{
 
 });
 
+// Starta servern
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servern körs på http://localhost:${PORT}`);
+});
