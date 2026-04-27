@@ -1,32 +1,32 @@
 // Adress till api
-const API_länk ="https://hotel-api-67w7.onrender.com";
+const API_länk = "https://hotel-api-67w7.onrender.com";
 // HTML-element
-const roomsContainer = document.getElementById('rooms-container');
-const loginForm = document.querySelector('.login-form');
+const roomsContainer = document.getElementById("rooms-container");
+const loginForm = document.querySelector(".login-form");
 // Kontrollera om användare är inloggad
 async function checkLoginStatus() {
   try {
     const response = await fetch(`${API_länk}/api/check-auth`, {
-      credentials: 'include'
+      credentials: "include",
     });
     const data = await response.json();
     if (data.loggedIn) {
       updateNavForLoggedInUser(data.user.role);
-      const welcomeText = document.querySelector('#user-welcome');
+      const welcomeText = document.querySelector("#user-welcome");
       if (welcomeText) {
         welcomeText.textContent = `Welcome back, ${data.user.username}!`;
       }
     }
-    if (window.location.pathname.includes('user.html') && !data.loggedIn) {
-      window.location.href = 'login.html';
+    if (window.location.pathname.includes("user.html") && !data.loggedIn) {
+      window.location.href = "login.html";
     }
-    if (window.location.pathname.includes('admin.html')) {
-      if (!data.loggedIn || data.user.role !== 'admin') {
-        window.location.href = 'index.html';
+    if (window.location.pathname.includes("admin.html")) {
+      if (!data.loggedIn || data.user.role !== "admin") {
+        window.location.href = "index.html";
       }
     }
   } catch (error) {
-    console.error('Fel vid kontroll av login:', error);
+    console.error("Fel vid kontroll av login:", error);
   }
 }
 // Uppdatera navigation när inloggad
@@ -35,13 +35,13 @@ function updateNavForLoggedInUser(role) {
   if (loginBtn) {
     loginBtn.textContent = "Log Out";
     loginBtn.href = "#";
-    loginBtn.addEventListener('click', logoutUser);
+    loginBtn.addEventListener("click", logoutUser);
   }
-  if (role === 'admin') {
-    const adminBtn = document.querySelector('.admin-hidden');
+  if (role === "admin") {
+    const adminBtn = document.querySelector(".admin-hidden");
     if (adminBtn) {
-      adminBtn.style.display = 'block';
-      adminBtn.classList.remove('admin-hidden');
+      adminBtn.style.display = "block";
+      adminBtn.classList.remove("admin-hidden");
     }
   }
 }
@@ -50,145 +50,164 @@ async function logoutUser(e) {
   e.preventDefault();
   try {
     await fetch(`${API_länk}/api/logout`, {
-      method: 'POST',
-      credentials: 'include'
+      method: "POST",
+      credentials: "include",
     });
-    window.location.href = 'index.html';
+    window.location.href = "index.html";
   } catch (error) {
-    console.error('Logout-fel:', error);
+    console.error("Logout-fel:", error);
   }
 }
 checkLoginStatus();
 // Login-formulär
 if (loginForm) {
-  loginForm.addEventListener('submit', async (e) => {
+  loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const username = loginForm.querySelector('input[type="text"]').value;
     const password = loginForm.querySelector('input[type="password"]').value;
     try {
       const response = await fetch(`${API_länk}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ username, password })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username, password }),
       });
       const result = await response.json();
       if (result.loggedIn) {
-        if (result.role === 'admin') {
-          window.location.href = 'admin.html';
+        if (result.role === "admin") {
+          window.location.href = "admin.html";
         } else {
-          window.location.href = 'user.html';
+          window.location.href = "user.html";
         }
       } else {
         alert("Login failed: " + result.message);
       }
     } catch (error) {
-      console.error('Login-fel:', error);
+      console.error("Login-fel:", error);
     }
   });
 }
 
 // Glömt lösenord
-const forgotPasswordForm = document.querySelector('.forgot-password-form');
+const forgotPasswordForm = document.querySelector(".forgot-password-form");
 
 if (forgotPasswordForm) {
-  const forgotEmailInput = document.getElementById('forgot-email');
-  const forgotMessage = document.getElementById('forgot-password-message');
-  const forgotButton = forgotPasswordForm.querySelector('button[type="submit"]');
+  const forgotEmailInput = document.getElementById("forgot-email");
+  const forgotMessage = document.getElementById("forgot-password-message");
+  const forgotButton = forgotPasswordForm.querySelector(
+    'button[type="submit"]',
+  );
 
-  function setForgotMessage(message, type = '') {
-    forgotMessage.classList.remove('success', 'error');
+  function setForgotMessage(message, type = "") {
+    forgotMessage.classList.remove("success", "error");
     if (type) forgotMessage.classList.add(type);
     forgotMessage.textContent = message;
   }
 
-  forgotPasswordForm.addEventListener('submit', async (e) => {
+  forgotPasswordForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const email = forgotEmailInput.value.trim().toLowerCase();
 
     if (!email) {
-      setForgotMessage('Please enter your email address.', 'error');
+      setForgotMessage("Please enter your email address.", "error");
       return;
     }
 
     try {
       forgotButton.disabled = true;
-      forgotButton.textContent = 'Sending...';
+      forgotButton.textContent = "Sending...";
 
       const response = await fetch(`${API_länk}/api/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
       });
 
       const result = await response.json();
 
       setForgotMessage(
-        result.message || 'If an account exists with that email, a password reset link has been sent.',
-        response.ok ? 'success' : 'error'
+        result.message ||
+          "If an account exists with that email, a password reset link has been sent.",
+        response.ok ? "success" : "error",
       );
     } catch (error) {
-      console.error('Forgot password error:', error);
-      setForgotMessage('Something went wrong. Please try again.', 'error');
+      console.error("Forgot password error:", error);
+      setForgotMessage("Something went wrong. Please try again.", "error");
     } finally {
       forgotButton.disabled = false;
-      forgotButton.textContent = 'Send reset link';
+      forgotButton.textContent = "Send reset link";
     }
   });
 }
 
 // Återställ lösenord
-const resetPasswordForm = document.querySelector('.reset-password-form');
+const resetPasswordForm = document.querySelector(".reset-password-form");
 
 if (resetPasswordForm) {
   const params = new URLSearchParams(window.location.search);
-  const token = params.get('token');
+  const token = params.get("token");
 
-  const passwordInput = document.getElementById('reset-password');
-  const confirmPasswordInput = document.getElementById('reset-confirm-password');
-  const resetMessage = document.getElementById('reset-password-message');
-  const resetButton = document.getElementById('reset-password-submit');
+  const passwordInput = document.getElementById("reset-password");
+  const confirmPasswordInput = document.getElementById(
+    "reset-confirm-password",
+  );
+  const resetMessage = document.getElementById("reset-password-message");
+  const resetButton = document.getElementById("reset-password-submit");
 
-  function setResetMessage(message, type = '') {
-    resetMessage.classList.remove('success', 'error');
+  function setResetMessage(message, type = "") {
+    resetMessage.classList.remove("success", "error");
     if (type) resetMessage.classList.add(type);
     resetMessage.textContent = message;
   }
 
   function getPasswordError(password) {
-    if (password.length < 8) return 'Password must be at least 8 characters.';
-    if (!/[A-Z]/.test(password)) return 'Password must include at least one uppercase letter.';
-    if (!/[a-z]/.test(password)) return 'Password must include at least one lowercase letter.';
-    if (!/\d/.test(password)) return 'Password must include at least one number.';
-    return '';
+    if (password.length < 8) return "Password must be at least 8 characters.";
+    if (!/[A-Z]/.test(password))
+      return "Password must include at least one uppercase letter.";
+    if (!/[a-z]/.test(password))
+      return "Password must include at least one lowercase letter.";
+    if (!/\d/.test(password))
+      return "Password must include at least one number.";
+    return "";
   }
 
   async function verifyResetToken() {
     if (!token) {
-      setResetMessage('Reset token is missing. Please request a new reset link.', 'error');
+      setResetMessage(
+        "Reset token is missing. Please request a new reset link.",
+        "error",
+      );
       resetButton.disabled = true;
       return;
     }
 
     try {
-      const response = await fetch(`${API_länk}/api/reset-password/${encodeURIComponent(token)}`);
+      const response = await fetch(
+        `${API_länk}/api/reset-password/${encodeURIComponent(token)}`,
+      );
       const result = await response.json();
 
       if (!response.ok || !result.valid) {
-        setResetMessage(result.message || 'This reset link is invalid or has expired.', 'error');
+        setResetMessage(
+          result.message || "This reset link is invalid or has expired.",
+          "error",
+        );
         resetButton.disabled = true;
       }
     } catch (error) {
-      console.error('Reset token verification error:', error);
-      setResetMessage('Could not verify reset link. Please try again.', 'error');
+      console.error("Reset token verification error:", error);
+      setResetMessage(
+        "Could not verify reset link. Please try again.",
+        "error",
+      );
       resetButton.disabled = true;
     }
   }
 
   verifyResetToken();
 
-  resetPasswordForm.addEventListener('submit', async (e) => {
+  resetPasswordForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const password = passwordInput.value;
@@ -197,100 +216,105 @@ if (resetPasswordForm) {
     const passwordError = getPasswordError(password);
 
     if (passwordError) {
-      setResetMessage(passwordError, 'error');
+      setResetMessage(passwordError, "error");
       return;
     }
 
     if (password !== confirmPassword) {
-      setResetMessage('Passwords do not match.', 'error');
+      setResetMessage("Passwords do not match.", "error");
       return;
     }
 
     try {
       resetButton.disabled = true;
-      resetButton.textContent = 'Updating...';
+      resetButton.textContent = "Updating...";
 
       const response = await fetch(`${API_länk}/api/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        setResetMessage(result.message || 'Could not update password.', 'error');
+        setResetMessage(
+          result.message || "Could not update password.",
+          "error",
+        );
         resetButton.disabled = false;
-        resetButton.textContent = 'Update password';
+        resetButton.textContent = "Update password";
         return;
       }
 
-      setResetMessage('Password updated successfully. Redirecting to login...', 'success');
+      setResetMessage(
+        "Password updated successfully. Redirecting to login...",
+        "success",
+      );
 
       setTimeout(() => {
-        window.location.href = 'login.html';
+        window.location.href = "login.html";
       }, 1200);
     } catch (error) {
-      console.error('Reset password error:', error);
-      setResetMessage('Something went wrong. Please try again.', 'error');
+      console.error("Reset password error:", error);
+      setResetMessage("Something went wrong. Please try again.", "error");
       resetButton.disabled = false;
-      resetButton.textContent = 'Update password';
+      resetButton.textContent = "Update password";
     }
   });
 }
 
-
-
-
 // Registrering
-const registerForm = document.querySelector('.register-form');
+const registerForm = document.querySelector(".register-form");
 
 if (registerForm) {
-  const emailInput = document.getElementById('reg-email');
-  const usernameInput = document.getElementById('reg-username');
-  const fullNameInput = document.getElementById('reg-fullname');
-  const passwordInput = document.getElementById('reg-password');
-  const confirmPasswordInput = document.getElementById('reg-confirm-password');
-  const submitButton = document.getElementById('register-submit');
-  const formMessage = document.getElementById('register-form-message');
+  const emailInput = document.getElementById("reg-email");
+  const usernameInput = document.getElementById("reg-username");
+  const fullNameInput = document.getElementById("reg-fullname");
+  const passwordInput = document.getElementById("reg-password");
+  const confirmPasswordInput = document.getElementById("reg-confirm-password");
+  const submitButton = document.getElementById("register-submit");
+  const formMessage = document.getElementById("register-form-message");
 
-  const emailMessage = document.getElementById('reg-email-message');
-  const usernameMessage = document.getElementById('reg-username-message');
-  const fullNameMessage = document.getElementById('reg-fullname-message');
-  const passwordMessage = document.getElementById('reg-password-message');
-  const confirmPasswordMessage = document.getElementById('reg-confirm-password-message');
+  const emailMessage = document.getElementById("reg-email-message");
+  const usernameMessage = document.getElementById("reg-username-message");
+  const fullNameMessage = document.getElementById("reg-fullname-message");
+  const passwordMessage = document.getElementById("reg-password-message");
+  const confirmPasswordMessage = document.getElementById(
+    "reg-confirm-password-message",
+  );
 
   let checkUserTimeout = null;
 
   function setFieldState(input, messageElement, message, state) {
-    input.classList.remove('input-error', 'input-success');
-    messageElement.classList.remove('error', 'success');
+    input.classList.remove("input-error", "input-success");
+    messageElement.classList.remove("error", "success");
 
-    if (state === 'error') {
-      input.classList.add('input-error');
-      messageElement.classList.add('error');
+    if (state === "error") {
+      input.classList.add("input-error");
+      messageElement.classList.add("error");
     }
 
-    if (state === 'success') {
-      input.classList.add('input-success');
-      messageElement.classList.add('success');
+    if (state === "success") {
+      input.classList.add("input-success");
+      messageElement.classList.add("success");
     }
 
-    messageElement.textContent = message || '';
+    messageElement.textContent = message || "";
   }
 
   function setFormMessage(message, state) {
-    formMessage.classList.remove('error', 'success');
+    formMessage.classList.remove("error", "success");
 
-    if (state === 'error') {
-      formMessage.classList.add('error');
+    if (state === "error") {
+      formMessage.classList.add("error");
     }
 
-    if (state === 'success') {
-      formMessage.classList.add('success');
+    if (state === "success") {
+      formMessage.classList.add("success");
     }
 
-    formMessage.textContent = message || '';
+    formMessage.textContent = message || "";
   }
 
   function isValidEmail(email) {
@@ -303,22 +327,22 @@ if (registerForm) {
 
   function getPasswordError(password) {
     if (password.length < 8) {
-      return 'Password must be at least 8 characters.';
+      return "Password must be at least 8 characters.";
     }
 
     if (!/[A-Z]/.test(password)) {
-      return 'Password must include at least one uppercase letter.';
+      return "Password must include at least one uppercase letter.";
     }
 
     if (!/[a-z]/.test(password)) {
-      return 'Password must include at least one lowercase letter.';
+      return "Password must include at least one lowercase letter.";
     }
 
     if (!/\d/.test(password)) {
-      return 'Password must include at least one number.';
+      return "Password must include at least one number.";
     }
 
-    return '';
+    return "";
   }
 
   function validateLocalFields() {
@@ -331,56 +355,106 @@ if (registerForm) {
     const confirmPassword = confirmPasswordInput.value;
 
     if (!email) {
-      setFieldState(emailInput, emailMessage, 'Email is required.', 'error');
+      setFieldState(emailInput, emailMessage, "Email is required.", "error");
       isValid = false;
     } else if (!isValidEmail(email)) {
-      setFieldState(emailInput, emailMessage, 'Please enter a valid email address.', 'error');
+      setFieldState(
+        emailInput,
+        emailMessage,
+        "Please enter a valid email address.",
+        "error",
+      );
       isValid = false;
     } else {
-      setFieldState(emailInput, emailMessage, 'Email format looks good.', 'success');
+      setFieldState(
+        emailInput,
+        emailMessage,
+        "Email format looks good.",
+        "success",
+      );
     }
 
     if (!username) {
-      setFieldState(usernameInput, usernameMessage, 'Username is required.', 'error');
+      setFieldState(
+        usernameInput,
+        usernameMessage,
+        "Username is required.",
+        "error",
+      );
       isValid = false;
     } else if (!isValidUsername(username)) {
       setFieldState(
         usernameInput,
         usernameMessage,
-        'Username must be 3-20 characters and may only contain letters, numbers and underscores.',
-        'error'
+        "Username must be 3-20 characters and may only contain letters, numbers and underscores.",
+        "error",
       );
       isValid = false;
     } else {
-      setFieldState(usernameInput, usernameMessage, 'Username format looks good.', 'success');
+      setFieldState(
+        usernameInput,
+        usernameMessage,
+        "Username format looks good.",
+        "success",
+      );
     }
 
     if (!fullName) {
-      setFieldState(fullNameInput, fullNameMessage, 'Full name is required.', 'error');
+      setFieldState(
+        fullNameInput,
+        fullNameMessage,
+        "Full name is required.",
+        "error",
+      );
       isValid = false;
     } else if (fullName.length < 2) {
-      setFieldState(fullNameInput, fullNameMessage, 'Full name must be at least 2 characters.', 'error');
+      setFieldState(
+        fullNameInput,
+        fullNameMessage,
+        "Full name must be at least 2 characters.",
+        "error",
+      );
       isValid = false;
     } else {
-      setFieldState(fullNameInput, fullNameMessage, '', 'success');
+      setFieldState(fullNameInput, fullNameMessage, "", "success");
     }
 
     const passwordError = getPasswordError(password);
     if (passwordError) {
-      setFieldState(passwordInput, passwordMessage, passwordError, 'error');
+      setFieldState(passwordInput, passwordMessage, passwordError, "error");
       isValid = false;
     } else {
-      setFieldState(passwordInput, passwordMessage, 'Password looks good.', 'success');
+      setFieldState(
+        passwordInput,
+        passwordMessage,
+        "Password looks good.",
+        "success",
+      );
     }
 
     if (!confirmPassword) {
-      setFieldState(confirmPasswordInput, confirmPasswordMessage, 'Please repeat your password.', 'error');
+      setFieldState(
+        confirmPasswordInput,
+        confirmPasswordMessage,
+        "Please repeat your password.",
+        "error",
+      );
       isValid = false;
     } else if (password !== confirmPassword) {
-      setFieldState(confirmPasswordInput, confirmPasswordMessage, 'Passwords do not match.', 'error');
+      setFieldState(
+        confirmPasswordInput,
+        confirmPasswordMessage,
+        "Passwords do not match.",
+        "error",
+      );
       isValid = false;
     } else {
-      setFieldState(confirmPasswordInput, confirmPasswordMessage, 'Passwords match.', 'success');
+      setFieldState(
+        confirmPasswordInput,
+        confirmPasswordMessage,
+        "Passwords match.",
+        "success",
+      );
     }
 
     return isValid;
@@ -398,14 +472,16 @@ if (registerForm) {
       const params = new URLSearchParams();
 
       if (isValidEmail(email)) {
-        params.append('email', email);
+        params.append("email", email);
       }
 
       if (isValidUsername(username)) {
-        params.append('username', username);
+        params.append("username", username);
       }
 
-      const response = await fetch(`${API_lnk}/api/check-user?${params.toString()}`);
+      const response = await fetch(
+        `${API_lnk}/api/check-user?${params.toString()}`,
+      );
       const result = await response.json();
 
       if (!response.ok) {
@@ -414,21 +490,41 @@ if (registerForm) {
 
       if (isValidEmail(email)) {
         if (result.emailExists) {
-          setFieldState(emailInput, emailMessage, 'An account with this email already exists.', 'error');
+          setFieldState(
+            emailInput,
+            emailMessage,
+            "An account with this email already exists.",
+            "error",
+          );
         } else {
-          setFieldState(emailInput, emailMessage, 'Email is available.', 'success');
+          setFieldState(
+            emailInput,
+            emailMessage,
+            "Email is available.",
+            "success",
+          );
         }
       }
 
       if (isValidUsername(username)) {
         if (result.usernameExists) {
-          setFieldState(usernameInput, usernameMessage, 'This username is already taken.', 'error');
+          setFieldState(
+            usernameInput,
+            usernameMessage,
+            "This username is already taken.",
+            "error",
+          );
         } else {
-          setFieldState(usernameInput, usernameMessage, 'Username is available.', 'success');
+          setFieldState(
+            usernameInput,
+            usernameMessage,
+            "Username is available.",
+            "success",
+          );
         }
       }
     } catch (error) {
-      console.error('Could not check user availability:', error);
+      console.error("Could not check user availability:", error);
     }
   }
 
@@ -440,50 +536,56 @@ if (registerForm) {
     }, 450);
   }
 
-  emailInput.addEventListener('input', () => {
-    setFormMessage('', '');
+  emailInput.addEventListener("input", () => {
+    setFormMessage("", "");
     validateLocalFields();
     scheduleAvailabilityCheck();
   });
 
-  usernameInput.addEventListener('input', () => {
-    setFormMessage('', '');
+  usernameInput.addEventListener("input", () => {
+    setFormMessage("", "");
     validateLocalFields();
     scheduleAvailabilityCheck();
   });
 
-  fullNameInput.addEventListener('input', () => {
-    setFormMessage('', '');
+  fullNameInput.addEventListener("input", () => {
+    setFormMessage("", "");
     validateLocalFields();
   });
 
-  passwordInput.addEventListener('input', () => {
-    setFormMessage('', '');
+  passwordInput.addEventListener("input", () => {
+    setFormMessage("", "");
     validateLocalFields();
   });
 
-  confirmPasswordInput.addEventListener('input', () => {
-    setFormMessage('', '');
+  confirmPasswordInput.addEventListener("input", () => {
+    setFormMessage("", "");
     validateLocalFields();
   });
 
-  registerForm.addEventListener('submit', async (e) => {
+  registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    setFormMessage('', '');
+    setFormMessage("", "");
 
     const localValid = validateLocalFields();
 
     if (!localValid) {
-      setFormMessage('Please fix the highlighted fields before registering.', 'error');
+      setFormMessage(
+        "Please fix the highlighted fields before registering.",
+        "error",
+      );
       return;
     }
 
     if (
-      emailInput.classList.contains('input-error') ||
-      usernameInput.classList.contains('input-error')
+      emailInput.classList.contains("input-error") ||
+      usernameInput.classList.contains("input-error")
     ) {
-      setFormMessage('Please fix the highlighted fields before registering.', 'error');
+      setFormMessage(
+        "Please fix the highlighted fields before registering.",
+        "error",
+      );
       return;
     }
 
@@ -494,127 +596,160 @@ if (registerForm) {
 
     try {
       submitButton.disabled = true;
-      submitButton.textContent = 'Registering...';
+      submitButton.textContent = "Registering...";
 
       const response = await fetch(`${API_lnk}/api/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username, fullName, password })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, username, fullName, password }),
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        setFormMessage('Registration successful! Redirecting to login...', 'success');
+        setFormMessage(
+          "Registration successful! Redirecting to login...",
+          "success",
+        );
 
         setTimeout(() => {
-          window.location.href = 'login.html';
+          window.location.href = "login.html";
         }, 900);
 
         return;
       }
 
-      if (result.field === 'email') {
-        setFieldState(emailInput, emailMessage, result.message, 'error');
+      if (result.field === "email") {
+        setFieldState(emailInput, emailMessage, result.message, "error");
       }
 
-      if (result.field === 'username') {
-        setFieldState(usernameInput, usernameMessage, result.message, 'error');
+      if (result.field === "username") {
+        setFieldState(usernameInput, usernameMessage, result.message, "error");
       }
 
-      setFormMessage(result.message || 'Registration failed.', 'error');
+      setFormMessage(result.message || "Registration failed.", "error");
     } catch (error) {
-      console.error('Registration error:', error);
-      setFormMessage('An error occurred during registration. Please try again.', 'error');
+      console.error("Registration error:", error);
+      setFormMessage(
+        "An error occurred during registration. Please try again.",
+        "error",
+      );
     } finally {
       submitButton.disabled = false;
-      submitButton.textContent = 'Register';
+      submitButton.textContent = "Register";
     }
   });
 }
 
-
 // ==========================================
 // SÖK, BOKA OCH VISA RUM
 // ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-  const searchForm = document.getElementById('search-form');
-  const roomsContainer = document.getElementById('rooms-container');
-  const savedSearch = JSON.parse(localStorage.getItem('lastRoomSearch') || 'null');
+document.addEventListener("DOMContentLoaded", () => {
+  const searchForm = document.getElementById("search-form");
+  const roomsContainer = document.getElementById("rooms-container");
+  const startDateInput = document.getElementById("search-start");
+  const endDateInput = document.getElementById("search-end");
+
+  if (startDateInput && endDateInput) {
+    const today = new Date().toISOString().slice(0, 10);
+
+    startDateInput.min = today;
+    endDateInput.min = today;
+
+    startDateInput.addEventListener("change", () => {
+      endDateInput.min = startDateInput.value || today;
+
+      if (endDateInput.value && endDateInput.value <= startDateInput.value) {
+        endDateInput.value = "";
+      }
+    });
+  }
+
+  const savedSearch = JSON.parse(
+    localStorage.getItem("lastRoomSearch") || "null",
+  );
 
   if (searchForm) {
-      if (savedSearch && savedSearch.start && savedSearch.end) {
-          document.getElementById('search-start').value = savedSearch.start;
-          document.getElementById('search-end').value = savedSearch.end;
-          document.getElementById('search-type').value = savedSearch.type || 'Any';
-          getRooms(savedSearch.start, savedSearch.end, savedSearch.type || 'Any');
-      } else if (roomsContainer) {
-          getRooms();
+    if (savedSearch && savedSearch.start && savedSearch.end) {
+      document.getElementById("search-start").value = savedSearch.start;
+      document.getElementById("search-end").value = savedSearch.end;
+      document.getElementById("search-type").value = savedSearch.type || "Any";
+      getRooms(savedSearch.start, savedSearch.end, savedSearch.type || "Any");
+    } else if (roomsContainer) {
+      getRooms();
+    }
+
+    searchForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const start = document.getElementById("search-start").value;
+      const end = document.getElementById("search-end").value;
+      const type = document.getElementById("search-type").value;
+
+      const today = new Date().toISOString().slice(0, 10);
+
+      if (start < today) {
+        alert("Check-in date cannot be in the past.");
+        return;
       }
 
-      searchForm.addEventListener('submit', (e) => {
-          e.preventDefault();
+      if (end <= start) {
+        alert("Check-out date must be after check-in date!");
+        return;
+      }
 
-          const start = document.getElementById('search-start').value;
-          const end = document.getElementById('search-end').value;
-          const type = document.getElementById('search-type').value;
+      localStorage.setItem(
+        "lastRoomSearch",
+        JSON.stringify({
+          start,
+          end,
+          type,
+        }),
+      );
 
-          if (new Date(start) >= new Date(end)) {
-              alert("Check-out date must be after check-in date!");
-              return;
-          }
-
-          localStorage.setItem('lastRoomSearch', JSON.stringify({
-              start,
-              end,
-              type
-          }));
-
-          getRooms(start, end, type);
-      });
+      getRooms(start, end, type);
+    });
   } else if (roomsContainer) {
-      getRooms();
+    getRooms();
   }
 
-  if (document.getElementById('bookings-list')) {
-      getUserBookings();
+  if (document.getElementById("bookings-list")) {
+    getUserBookings();
   }
 
-  if (window.location.pathname.includes('booking.html')) {
-      confirmStripeBooking();
+  if (window.location.pathname.includes("booking.html")) {
+    confirmStripeBooking();
   }
 
   const params = new URLSearchParams(window.location.search);
-  if (params.get('payment') === 'cancelled') {
-      alert("Payment was cancelled. No booking was created.");
+  if (params.get("payment") === "cancelled") {
+    alert("Payment was cancelled. No booking was created.");
   }
 });
 
-
-
-async function getRooms(start = '', end = '', type = '') {
-  const roomsContainer = document.getElementById('rooms-container');
+async function getRooms(start = "", end = "", type = "") {
+  const roomsContainer = document.getElementById("rooms-container");
   if (!roomsContainer) return;
- 
+
   try {
-      let url = `${API_länk}/api/rooms`;
-      if (start && end) {
-          url += `?start=${start}&end=${end}&type=${type}`;
-      }
-      const response = await fetch(url);
-      const rooms = await response.json();
-      roomsContainer.innerHTML = ''; // Tömmer rutan
-      if (rooms.length === 0) {
-          roomsContainer.innerHTML = `<p style="text-align:center; width:100%;">No available rooms found for these dates.</p>`;
-          return;
-      }
-      rooms.forEach(room => {
-          let imagePath = 'single.jpg';
-          if (room.type === 'Double') imagePath = 'double.jpg';
-          if (room.type === 'Suite') imagePath = 'suite.jpg';
-          const roomCard = document.createElement('article');
-          roomCard.classList.add('room-card');
-          roomCard.innerHTML = `
+    let url = `${API_länk}/api/rooms`;
+    if (start && end) {
+      url += `?start=${start}&end=${end}&type=${type}`;
+    }
+    const response = await fetch(url);
+    const rooms = await response.json();
+    roomsContainer.innerHTML = ""; // Tömmer rutan
+    if (rooms.length === 0) {
+      roomsContainer.innerHTML = `<p style="text-align:center; width:100%;">No available rooms found for these dates.</p>`;
+      return;
+    }
+    rooms.forEach((room) => {
+      let imagePath = "single.jpg";
+      if (room.type === "Double") imagePath = "double.jpg";
+      if (room.type === "Suite") imagePath = "suite.jpg";
+      const roomCard = document.createElement("article");
+      roomCard.classList.add("room-card");
+      roomCard.innerHTML = `
                <div class="room-text">
                   <h3 class="room-title">Room ${room.room_number} - ${room.type}</h3>
                   <p class="room-desc">${room.description}</p>
@@ -625,173 +760,182 @@ async function getRooms(start = '', end = '', type = '') {
                   <img src="images/rooms/${imagePath}" alt="${room.type} room" class="room-image">
               </div>
           `;
-          roomsContainer.appendChild(roomCard);
-      });
+      roomsContainer.appendChild(roomCard);
+    });
   } catch (error) {
-      console.error('Fel vid hämtning av rum:', error);
-      roomsContainer.innerHTML = `<p style="text-align:center; color:red;">Kunde inte hämta rum.</p>`;
+    console.error("Fel vid hämtning av rum:", error);
+    roomsContainer.innerHTML = `<p style="text-align:center; color:red;">Kunde inte hämta rum.</p>`;
   }
 }
 
-
-
-window.bookRoom = async function(roomId) {
-  const startInput = document.getElementById('search-start');
-  const endInput = document.getElementById('search-end');
-  const typeInput = document.getElementById('search-type');
+window.bookRoom = async function (roomId) {
+  const startInput = document.getElementById("search-start");
+  const endInput = document.getElementById("search-end");
+  const typeInput = document.getElementById("search-type");
 
   if (!startInput || !endInput || !startInput.value || !endInput.value) {
-      alert("Please search for available dates in the panel above before booking a room!");
-      return;
+    alert(
+      "Please search for available dates in the panel above before booking a room!",
+    );
+    return;
   }
 
   const startDate = startInput.value;
   const endDate = endInput.value;
-  const type = typeInput ? typeInput.value : 'Any';
+  const type = typeInput ? typeInput.value : "Any";
 
-  if (startDate >= endDate) {
-      alert("Check-out date must be after check-in date.");
-      return;
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (startDate < today) {
+    alert("Check-in date cannot be in the past.");
+    return;
   }
 
-  localStorage.setItem('lastRoomSearch', JSON.stringify({
+  if (endDate <= startDate) {
+    alert("Check-out date must be after check-in date.");
+    return;
+  }
+
+  localStorage.setItem(
+    "lastRoomSearch",
+    JSON.stringify({
       start: startDate,
       end: endDate,
-      type: type
-  }));
+      type: type,
+    }),
+  );
 
   try {
-      const response = await fetch(`${API_länk}/api/create-checkout-session`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ roomId, startDate, endDate })
-      });
+    const response = await fetch(`${API_länk}/api/create-checkout-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ roomId, startDate, endDate }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!response.ok) {
-          alert(data.message || "Could not start payment.");
-          if (response.status === 401) {
-              window.location.href = "login.html";
-          }
-          return;
+    if (!response.ok) {
+      alert(data.message || "Could not start payment.");
+      if (response.status === 401) {
+        window.location.href = "login.html";
       }
+      return;
+    }
 
-      if (data.url) {
-          window.location.href = data.url;
-      } else {
-          alert("Could not load payment page.");
-      }
-
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Could not load payment page.");
+    }
   } catch (error) {
-      console.error("Booking/payment error:", error);
-      alert("Something went wrong while starting payment.");
+    console.error("Booking/payment error:", error);
+    alert("Something went wrong while starting payment.");
   }
 };
 
-
-
 async function confirmStripeBooking() {
-  const title = document.getElementById('payment-title');
-  const message = document.getElementById('booking-message');
-  const dates = document.getElementById('booking-dates');
-  const bookingIdText = document.getElementById('booking-id-text');
+  const title = document.getElementById("payment-title");
+  const message = document.getElementById("booking-message");
+  const dates = document.getElementById("booking-dates");
+  const bookingIdText = document.getElementById("booking-id-text");
 
   if (!title || !message || !dates || !bookingIdText) return;
 
   const params = new URLSearchParams(window.location.search);
-  const sessionId = params.get('session_id');
+  const sessionId = params.get("session_id");
 
   if (!sessionId) {
-      title.textContent = "Missing payment session";
-      message.textContent = "No Stripe session ID was found in the URL.";
+    title.textContent = "Missing payment session";
+    message.textContent = "No Stripe session ID was found in the URL.";
+    dates.textContent = "";
+    bookingIdText.textContent = "";
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${API_länk}/api/confirm-booking?session_id=${encodeURIComponent(sessionId)}`,
+      { credentials: "include" },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      title.textContent =
+        "Payment received, but booking could not be confirmed";
+      message.textContent =
+        data.message || "Something went wrong while confirming your booking.";
       dates.textContent = "";
       bookingIdText.textContent = "";
       return;
-  }
+    }
 
-  try {
-      const response = await fetch(
-          `${API_länk}/api/confirm-booking?session_id=${encodeURIComponent(sessionId)}`,
-          { credentials: 'include' }
-      );
+    const formattedStart = new Date(data.startDate).toLocaleDateString();
+    const formattedEnd = new Date(data.endDate).toLocaleDateString();
 
-      const data = await response.json();
-
-      if (!response.ok) {
-          title.textContent = "Payment received, but booking could not be confirmed";
-          message.textContent = data.message || "Something went wrong while confirming your booking.";
-          dates.textContent = "";
-          bookingIdText.textContent = "";
-          return;
-      }
-
-      const formattedStart = new Date(data.startDate).toLocaleDateString();
-      const formattedEnd = new Date(data.endDate).toLocaleDateString();
-
-      title.textContent = "Payment successful ✓";
-      message.textContent = "Your booking has been confirmed and saved.";
-      dates.innerHTML = `Room <strong>${data.roomNumber}</strong> (${data.roomType}) from <strong>${formattedStart}</strong> to <strong>${formattedEnd}</strong>.`;
-      bookingIdText.innerHTML = `Booking ID: <strong>#${data.bookingId}</strong>`;
+    title.textContent = "Payment successful ✓";
+    message.textContent = "Your booking has been confirmed and saved.";
+    dates.innerHTML = `Room <strong>${data.roomNumber}</strong> (${data.roomType}) from <strong>${formattedStart}</strong> to <strong>${formattedEnd}</strong>.`;
+    bookingIdText.innerHTML = `Booking ID: <strong>#${data.bookingId}</strong>`;
   } catch (error) {
-      console.error("Error confirming Stripe booking:", error);
-      title.textContent = "Could not confirm booking";
-      message.textContent = "A server error occurred while confirming your booking.";
-      dates.textContent = "";
-      bookingIdText.textContent = "";
+    console.error("Error confirming Stripe booking:", error);
+    title.textContent = "Could not confirm booking";
+    message.textContent =
+      "A server error occurred while confirming your booking.";
+    dates.textContent = "";
+    bookingIdText.textContent = "";
   }
 }
 
-
-window.cancelBooking = async function(bookingId) {
+window.cancelBooking = async function (bookingId) {
   if (!confirm("Are you sure you want to cancel this booking?")) return;
   try {
-      const response = await fetch(`${API_länk}/api/bookings/${bookingId}`, {
-          method: 'DELETE',
-          credentials: 'include'
-      });
-      if (response.ok) {
-          getUserBookings(); // Ladda om listan direkt efter avbokning
-      } else {
-          alert("Kunde inte avboka.");
-      }
-  } catch (error) {
-      console.error(error);
-  }
-}
-// Bildslider på hotel-info.html
-const sliderImg = document.querySelector('.slider-img');
-if (sliderImg) {
-    const images = [
-        'images/hotel/1.jpg',
-        'images/hotel/2.jpg',
-        'images/hotel/3.jpg',
-        'images/hotel/4.jpg',
-        'images/hotel/5.jpg',
-        'images/hotel/6.jpg',
-        'images/hotel/7.jpg'
-    ];
-    let currentImageIndex = 0;
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    function showImage() {
-        sliderImg.style.backgroundImage = `url(${images[currentImageIndex]})`;
+    const response = await fetch(`${API_länk}/api/bookings/${bookingId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (response.ok) {
+      getUserBookings(); // Ladda om listan direkt efter avbokning
+    } else {
+      alert("Kunde inte avboka.");
     }
-    // Klicka på vänsterpil
-    prevBtn.addEventListener('click', () => {
-        currentImageIndex --;
-        if (currentImageIndex < 0) currentImageIndex = images.length - 1;
-        showImage();
-    });
-    //Klicka på högerpil
-    nextBtn.addEventListener('click', () => {
-        currentImageIndex ++;
-        if (currentImageIndex >= images.length) currentImageIndex = 0;
-        showImage();
-    });
-    // Visa första bilden direkt
+  } catch (error) {
+    console.error(error);
+  }
+};
+// Bildslider på hotel-info.html
+const sliderImg = document.querySelector(".slider-img");
+if (sliderImg) {
+  const images = [
+    "images/hotel/1.jpg",
+    "images/hotel/2.jpg",
+    "images/hotel/3.jpg",
+    "images/hotel/4.jpg",
+    "images/hotel/5.jpg",
+    "images/hotel/6.jpg",
+    "images/hotel/7.jpg",
+  ];
+  let currentImageIndex = 0;
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  function showImage() {
+    sliderImg.style.backgroundImage = `url(${images[currentImageIndex]})`;
+  }
+  // Klicka på vänsterpil
+  prevBtn.addEventListener("click", () => {
+    currentImageIndex--;
+    if (currentImageIndex < 0) currentImageIndex = images.length - 1;
     showImage();
+  });
+  //Klicka på högerpil
+  nextBtn.addEventListener("click", () => {
+    currentImageIndex++;
+    if (currentImageIndex >= images.length) currentImageIndex = 0;
+    showImage();
+  });
+  // Visa första bilden direkt
+  showImage();
 }
 // Language switch
 const translations = {
@@ -819,11 +963,16 @@ const translations = {
     hotelTitle: "Hotel California",
     descTitle: "Description",
     hotelPics: "Pictures of the Hotel",
-    hotelDesc1: "Experience comfort and elegance at Hotel California, a welcoming retreat in the heart of Trollhättan.",
-    hotelDesc2: "Our thoughtfully designed rooms combine modern comfort with a warm atmosphere, creating the perfect place to relax after a long day.",
-    hotelDesc3: "Guests enjoy complimentary breakfast each morning along with attentive service throughout their stay.",
-    hotelDesc4: "Whether you're here for a romantic getaway or a family vacation, Hotel California has something for everyone.",
-    hotelDesc5: "If you have any questions, please don't hesitate to contact us!",
+    hotelDesc1:
+      "Experience comfort and elegance at Hotel California, a welcoming retreat in the heart of Trollhättan.",
+    hotelDesc2:
+      "Our thoughtfully designed rooms combine modern comfort with a warm atmosphere, creating the perfect place to relax after a long day.",
+    hotelDesc3:
+      "Guests enjoy complimentary breakfast each morning along with attentive service throughout their stay.",
+    hotelDesc4:
+      "Whether you're here for a romantic getaway or a family vacation, Hotel California has something for everyone.",
+    hotelDesc5:
+      "If you have any questions, please don't hesitate to contact us!",
     hotelDesc6: "Contact information can be found at the bottom of the page.",
     // BOOKING CONFIRMATION
     bookingConfirmed: "Booking Confirmed ✓",
@@ -837,12 +986,14 @@ const translations = {
     adminBookedFor: "Booked for",
     imgText: "Image",
     // LOGIN
-    loginInfoText: "Log in to manage your room bookings and adjust user settings",
+    loginInfoText:
+      "Log in to manage your room bookings and adjust user settings",
     username: "Username",
     password: "Password",
     registerLink: "Not a user yet? Register Here",
     // REGISTER
-    registerInfo: "Register to manage your room bookings and adjust user settings",
+    registerInfo:
+      "Register to manage your room bookings and adjust user settings",
     email: "E-Mail",
     fullName: "Full Name",
     repeatPassword: "Repeat Password",
@@ -859,7 +1010,7 @@ const translations = {
     contactInfo: "Contact Information",
     address: "Address",
     open24: "Reception Open 24 Hours",
-    copyright: "Copyright"
+    copyright: "Copyright",
   },
   sv: {
     // NAV
@@ -885,10 +1036,14 @@ const translations = {
     hotelTitle: "Hotel California",
     descTitle: "Beskrivning",
     hotelPics: "Bilder på hotellet",
-    hotelDesc1: "Upplev komfort och elegans på Hotel California, en välkomnande oas i hjärtat av Trollhättan.",
-    hotelDesc2: "Våra genomtänkta rum kombinerar modern komfort med en varm atmosfär, perfekt för avkoppling efter en lång dag.",
-    hotelDesc3: "Gästerna njuter av kostnadsfri frukost varje morgon samt personlig service under hela vistelsen.",
-    hotelDesc4: "Oavsett om du är här för en romantisk resa eller familjesemester har Hotel California något för alla.",
+    hotelDesc1:
+      "Upplev komfort och elegans på Hotel California, en välkomnande oas i hjärtat av Trollhättan.",
+    hotelDesc2:
+      "Våra genomtänkta rum kombinerar modern komfort med en varm atmosfär, perfekt för avkoppling efter en lång dag.",
+    hotelDesc3:
+      "Gästerna njuter av kostnadsfri frukost varje morgon samt personlig service under hela vistelsen.",
+    hotelDesc4:
+      "Oavsett om du är här för en romantisk resa eller familjesemester har Hotel California något för alla.",
     hotelDesc5: "Om du har några frågor, tveka inte att kontakta oss!",
     hotelDesc6: "Kontaktinformation finns längst ner på sidan.",
     // BOOKING
@@ -925,11 +1080,11 @@ const translations = {
     contactInfo: "Kontaktinformation",
     address: "Adress",
     open24: "Reception öppen 24 timmar",
-    copyright: "Copyright"
-  }
+    copyright: "Copyright",
+  },
 };
-function setLanguage(lang){
-  document.querySelectorAll("[data-i18n]").forEach(el => {
+function setLanguage(lang) {
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
     if (translations[lang][key]) {
       el.textContent = translations[lang][key];
@@ -937,7 +1092,7 @@ function setLanguage(lang){
   });
   localStorage.setItem("lang", lang);
   const btn = document.getElementById("langBtn");
-  if(btn){
+  if (btn) {
     btn.textContent = lang.toUpperCase();
   }
 }
@@ -945,7 +1100,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const savedLang = localStorage.getItem("lang") || "en";
   setLanguage(savedLang);
   const btn = document.getElementById("langBtn");
-  if(btn){
+  if (btn) {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       const current = localStorage.getItem("lang") || "en";
@@ -955,12 +1110,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 // Visa användarinställningar
-function showSettings(){
+function showSettings() {
   document.getElementById("bookings-section").style.display = "none";
   document.getElementById("user-settings").style.display = "block";
 }
 // visa bokningar
-function showBookings(){
+function showBookings() {
   document.getElementById("bookings-section").style.display = "block";
   document.getElementById("user-settings").style.display = "none";
 }
@@ -974,17 +1129,18 @@ if (saveBtn) {
       const response = await fetch(`${API_länk}/api/update-user`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         credentials: "include",
         body: JSON.stringify({
           email: email,
-          password: password
-        })
+          password: password,
+        }),
       });
       const result = await response.json();
       if (response.ok) {
-        document.getElementById("settings-message").textContent = "Settings updated successfully!";
+        document.getElementById("settings-message").textContent =
+          "Settings updated successfully!";
       } else {
         alert("Error: " + result.message);
       }
@@ -995,27 +1151,30 @@ if (saveBtn) {
   });
 }
 async function getUserBookings() {
-  const bookingsContainer = document.querySelector('#bookings-section');
+  const bookingsContainer = document.querySelector("#bookings-section");
   if (!bookingsContainer) return;
   try {
-      const response = await fetch(`${API_länk}/api/user/bookings`, { credentials: 'include' });
-      const bookings = await response.json();
-      // rensa gamla bokningskort
-      const welcomeHtml = bookingsContainer.querySelector('.user-welcome').outerHTML;
-      const titleHtml = bookingsContainer.querySelector('.user-title').outerHTML;
-      bookingsContainer.innerHTML = welcomeHtml + titleHtml;
-      if (bookings.length === 0) {
-          bookingsContainer.innerHTML += "<p>Du har inga aktiva bokningar.</p>";
-          return;
-      }
-      bookings.forEach(b => {
-          const card = document.createElement('article');
-          card.classList.add('user-booking-card');
-         
-          // Formatera datum snyggt
-          const start = new Date(b.start_date).toLocaleDateString();
-          const end = new Date(b.end_date).toLocaleDateString();
-          card.innerHTML = `
+    const response = await fetch(`${API_länk}/api/user/bookings`, {
+      credentials: "include",
+    });
+    const bookings = await response.json();
+    // rensa gamla bokningskort
+    const welcomeHtml =
+      bookingsContainer.querySelector(".user-welcome").outerHTML;
+    const titleHtml = bookingsContainer.querySelector(".user-title").outerHTML;
+    bookingsContainer.innerHTML = welcomeHtml + titleHtml;
+    if (bookings.length === 0) {
+      bookingsContainer.innerHTML += "<p>Du har inga aktiva bokningar.</p>";
+      return;
+    }
+    bookings.forEach((b) => {
+      const card = document.createElement("article");
+      card.classList.add("user-booking-card");
+
+      // Formatera datum snyggt
+      const start = new Date(b.start_date).toLocaleDateString();
+      const end = new Date(b.end_date).toLocaleDateString();
+      card.innerHTML = `
               <div class="user-lines">
                   <div class="line-title">Room ${b.room_number}</div>
                   <div class="line">Type: ${b.type}</div>
@@ -1027,20 +1186,20 @@ async function getUserBookings() {
               </div>
               <div class="user-img" style="background-image: url('images/rooms/${b.type.toLowerCase()}.jpg'); background-size: cover;"></div>
           `;
-          bookingsContainer.appendChild(card);
-      });
+      bookingsContainer.appendChild(card);
+    });
   } catch (error) {
-      console.error("Kunde inte hämta bokningar:", error);
+    console.error("Kunde inte hämta bokningar:", error);
   }
 }
 // Kör hämta bokningar om på user.html
-if (window.location.pathname.includes('user.html')) {
+if (window.location.pathname.includes("user.html")) {
   getUserBookings();
 }
 
 // Kör funktionen om vi är på admin-sidan
-if(window.location.pathname.includes("admin.html")){
- loadAdminBookings();
+if (window.location.pathname.includes("admin.html")) {
+  loadAdminBookings();
 }
 
 // Ta bort en bokning från admin-sidan
@@ -1050,7 +1209,7 @@ async function adminCancelBooking(id) {
   try {
     const response = await fetch(`${API_länk}/api/admin/bookings/${id}`, {
       method: "DELETE",
-      credentials: "include"
+      credentials: "include",
     });
 
     const contentType = response.headers.get("content-type") || "";
@@ -1078,19 +1237,19 @@ async function adminCancelBooking(id) {
 }
 
 // Ladda alla rum i admin-sidan
-async function loadAdminRooms(){
+async function loadAdminRooms() {
   const container = document.querySelector(".admin-rooms");
-  if(!container) return;
+  if (!container) return;
   const response = await fetch(`${API_länk}/api/rooms`);
   const rooms = await response.json();
- 
+
   container.innerHTML = "";
-  rooms.forEach(room => {
-  const card = document.createElement("div");
-  card.innerHTML = `
+  rooms.forEach((room) => {
+    const card = document.createElement("div");
+    card.innerHTML = `
   <div class="admin-room">
   Room ${room.room_number} - 
-  <span class="${room.status === 'Booked' ? 'booked' : 'available'}">
+  <span class="${room.status === "Booked" ? "booked" : "available"}">
   ${room.status}
   </span>
   <br>
@@ -1104,61 +1263,58 @@ async function loadAdminRooms(){
   </div>
   `;
 
-
-  container.appendChild(card);
- });
+    container.appendChild(card);
+  });
 }
 // Ta bort ett rum från admin-sidan
-async function deleteRoom(id){
- if(!confirm("Delete this room?")) return;
- await fetch(`${API_länk}/api/admin/rooms/${id}`,{
-  method:"DELETE",
-  credentials:"include"
- });
- loadAdminRooms();
+async function deleteRoom(id) {
+  if (!confirm("Delete this room?")) return;
+  await fetch(`${API_länk}/api/admin/rooms/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  loadAdminRooms();
 }
 // Lägg till ett nytt rum (admin)
-async function addRoom(){
- const number = document.getElementById("room-number").value;
- const type = document.getElementById("room-type").value;
- const price = document.getElementById("room-price").value;
- const description = document.getElementById("room-description").value;
+async function addRoom() {
+  const number = document.getElementById("room-number").value;
+  const type = document.getElementById("room-type").value;
+  const price = document.getElementById("room-price").value;
+  const description = document.getElementById("room-description").value;
 
- if(!number || !type || !price){
-  alert("Fill all fields");
-  return;
- }
+  if (!number || !type || !price) {
+    alert("Fill all fields");
+    return;
+  }
 
- await fetch(`${API_länk}/api/admin/rooms`,{
-  method:"POST",
-  headers:{
-   "Content-Type":"application/json"
-  },
-  credentials:"include",
-  body:JSON.stringify({
-   room_number:number,
-   type:type,
-   price_per_night:price,
-   description:description
-  })
- });
+  await fetch(`${API_länk}/api/admin/rooms`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({
+      room_number: number,
+      type: type,
+      price_per_night: price,
+      description: description,
+    }),
+  });
 }
-function showAdminBookings(){
- document.getElementById("admin-bookings").style.display="block";
- document.getElementById("admin-rooms").style.display="none";
+function showAdminBookings() {
+  document.getElementById("admin-bookings").style.display = "block";
+  document.getElementById("admin-rooms").style.display = "none";
 }
-function showAdminRooms(){
- document.getElementById("admin-bookings").style.display="none";
- document.getElementById("admin-rooms").style.display="block";
- loadAdminRooms();
+function showAdminRooms() {
+  document.getElementById("admin-bookings").style.display = "none";
+  document.getElementById("admin-rooms").style.display = "block";
+  loadAdminRooms();
 }
-
-
 
 async function loadAdminBookings() {
   try {
     const res = await fetch(`${API_länk}/api/admin/bookings`, {
-      credentials: "include"
+      credentials: "include",
     });
 
     const contentType = res.headers.get("content-type") || "";
@@ -1182,7 +1338,7 @@ async function loadAdminBookings() {
       return;
     }
 
-    bookings.forEach(b => {
+    bookings.forEach((b) => {
       const start = new Date(b.start_date).toLocaleDateString();
       const end = new Date(b.end_date).toLocaleDateString();
 
@@ -1209,15 +1365,15 @@ async function loadAdminBookings() {
   }
 }
 
-
-
-async function loadAdminStats(){
- const res = await fetch(API_länk + "/api/admin/stats",{credentials:"include"});
- const data = await res.json();
- document.getElementById("total-bookings").innerText = data.bookings;
- document.getElementById("available-rooms").innerText = data.rooms;
+async function loadAdminStats() {
+  const res = await fetch(API_länk + "/api/admin/stats", {
+    credentials: "include",
+  });
+  const data = await res.json();
+  document.getElementById("total-bookings").innerText = data.bookings;
+  document.getElementById("available-rooms").innerText = data.rooms;
 }
-if(window.location.pathname.includes("admin.html")){
- loadAdminStats();
- loadAdminRooms();
+if (window.location.pathname.includes("admin.html")) {
+  loadAdminStats();
+  loadAdminRooms();
 }
