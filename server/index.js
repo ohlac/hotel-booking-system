@@ -5,12 +5,15 @@ const cors = require('cors');
 const session = require('express-session');
 const app = express();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 
 const {
     sendRegistrationEmail,
     sendBookingConfirmedEmail,
     sendBookingCancelledEmail,
-    sendUserUpdatedEmail
+    sendUserUpdatedEmail,
+    sendPasswordResetEmail
 } = require('./email');
 
 
@@ -60,6 +63,34 @@ const pool = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0
 });
+
+
+function hashResetToken(token) {
+    return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function isStrongPassword(password) {
+    return (
+        typeof password === 'string' &&
+        password.length >= 8 &&
+        /[A-Z]/.test(password) &&
+        /[a-z]/.test(password) &&
+        /\d/.test(password)
+    );
+}
+
+async function passwordMatches(inputPassword, storedPassword) {
+    if (!storedPassword) return false;
+
+    // Std fr nya hashade lsenord
+    if (storedPassword.startsWith('$2a$') || storedPassword.startsWith('$2b$') || storedPassword.startsWith('$2y$')) {
+        return bcrypt.compare(inputPassword, storedPassword);
+    }
+
+    // Std fr dina gamla lsenord i klartext s att befintliga konton inte gr snder direkt
+    return inputPassword === storedPassword;
+}
+
 
 // Test för att se att servern fungerar
 app.get('/', (req, res) => {
@@ -559,9 +590,11 @@ app.post('/api/register', async (req, res) => {
             }
         }
 
+        const hashedPassword = await bcrypt.hash(password, 12);
+
         await pool.promise().query(
             'INSERT INTO users (email, username, full_name, password, role) VALUES (?, ?, ?, ?, ?)',
-            [email, username, fullName, password, 'user']
+            [email, username, fullName, hashedPassword, 'user']
         );
 
         try {
@@ -590,22 +623,53 @@ app.post('/api/register', async (req, res) => {
 // Logga in
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
+
     try {
-        const [users] = await pool.promise().query('SELECT * FROM users WHERE username = ?', [username]); 
-        if (users.length === 0) return res.status(401).json({ loggedIn: false, message: 'Felaktigt användarnamn' });
-        
-        const user = users[0];
-        if (password === user.password) {
-            req.session.user = { id: user.id, username: user.username, role: user.role };
-            req.session.save((err) => {
-                if (err) return res.status(500).json({ error: 'Kunde inte spara session' });
-                res.json({ loggedIn: true, role: user.role });
-            }); 
-        } else {
-            res.status(401).json({ loggedIn: false, message: 'Felaktigt lösenord' });
+        const [users] = await pool.promise().query(
+            'SELECT * FROM users WHERE username = ?',
+            [username]
+        );
+
+        if (users.length === 0) {
+            return res.status(401).json({
+                loggedIn: false,
+                message: 'Felaktigt anvndarnamn'
+            });
         }
+
+        const user = users[0];
+        const validPassword = await passwordMatches(password, user.password);
+
+        if (!validPassword) {
+            return res.status(401).json({
+                loggedIn: false,
+                message: 'Felaktigt lsenord'
+            });
+        }
+
+        req.session.user = {
+            id: user.id,
+            username: user.username,
+            role: user.role
+        };
+
+        req.session.save((err) => {
+            if (err) {
+                return res.status(500).json({
+                    error: 'Kunde inte spara session'
+                });
+            }
+
+            res.json({
+                loggedIn: true,
+                role: user.role
+            });
+        });
     } catch (error) {
-        res.status(500).json({ error: 'Kunde inte logga in' });
+        console.error('Could not log in:', error);
+        res.status(500).json({
+            error: 'Kunde inte logga in'
+        });
     }
 });
 
@@ -738,6 +802,186 @@ app.post('/api/admin/rooms', async (req,res)=>{
  res.json({message:"Room added"});
 
 });
+
+
+// LÖSENORDSÅTERSTÄLLNING
+
+// Begär lösenordsåterställning
+app.post('/api/forgot-password', async (req, res) => {
+    const email = String(req.body.email || '').trim().toLowerCase();
+
+    try {
+        // Svara alltid neutralt så att man inte kan lista ut vilka e-postadresser som har konto
+        const genericResponse = {
+            message: 'If an account exists with that email, a password reset link has been sent.'
+        };
+
+        if (!email) {
+            return res.json(genericResponse);
+        }
+
+        const [users] = await pool.promise().query(
+            `SELECT id, email, full_name
+             FROM users
+             WHERE LOWER(email) = ?
+             LIMIT 1`,
+            [email]
+        );
+
+        if (users.length === 0) {
+            return res.json(genericResponse);
+        }
+
+        const user = users[0];
+
+        // Gör gamla reset-länkar oanvända
+        await pool.promise().query(
+            `UPDATE password_reset_tokens
+             SET used_at = NOW()
+             WHERE user_id = ? AND used_at IS NULL`,
+            [user.id]
+        );
+
+        const token = crypto.randomBytes(32).toString('hex');
+        const tokenHash = hashResetToken(token);
+
+        await pool.promise().query(
+            `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+             VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 30 MINUTE))`,
+            [user.id, tokenHash]
+        );
+
+        const frontendUrl = process.env.FRONTEND_URL || 'https://hotel-frontend-vi9g.onrender.com';
+        const resetLink = `${frontendUrl}/reset-password.html?token=${encodeURIComponent(token)}`;
+
+        await sendPasswordResetEmail({
+            to: user.email,
+            fullName: user.full_name,
+            resetLink
+        });
+
+        res.json(genericResponse);
+    } catch (error) {
+        console.error('Could not process forgot password request:', error);
+
+        // Även vid serverfel ges inte detaljer till användaren
+        res.json({
+            message: 'If an account exists with that email, a password reset link has been sent.'
+        });
+    }
+});
+
+
+
+// Kontrollera om reset-länk är giltig
+app.get('/api/reset-password/:token', async (req, res) => {
+    const token = String(req.params.token || '');
+
+    try {
+        if (!token) {
+            return res.status(400).json({
+                valid: false,
+                message: 'Missing token.'
+            });
+        }
+
+        const tokenHash = hashResetToken(token);
+
+        const [rows] = await pool.promise().query(
+            `SELECT id
+             FROM password_reset_tokens
+             WHERE token_hash = ?
+               AND used_at IS NULL
+               AND expires_at > NOW()
+             LIMIT 1`,
+            [tokenHash]
+        );
+
+        if (rows.length === 0) {
+            return res.status(400).json({
+                valid: false,
+                message: 'This password reset link is invalid or has expired.'
+            });
+        }
+
+        res.json({
+            valid: true,
+            message: 'Password reset link is valid.'
+        });
+    } catch (error) {
+        console.error('Could not verify reset token:', error);
+        res.status(500).json({
+            valid: false,
+            message: 'Could not verify reset link.'
+        });
+    }
+});
+
+// Sätt nytt lösenord med reset-token
+app.post('/api/reset-password', async (req, res) => {
+    const token = String(req.body.token || '');
+    const password = String(req.body.password || '');
+
+    try {
+        if (!token) {
+            return res.status(400).json({
+                message: 'Missing reset token.'
+            });
+        }
+
+        if (!isStrongPassword(password)) {
+            return res.status(400).json({
+                message: 'Password must be at least 8 characters and include uppercase, lowercase and a number.'
+            });
+        }
+
+        const tokenHash = hashResetToken(token);
+
+        const [rows] = await pool.promise().query(
+            `SELECT prt.id, prt.user_id
+             FROM password_reset_tokens prt
+             WHERE prt.token_hash = ?
+               AND prt.used_at IS NULL
+               AND prt.expires_at > NOW()
+             LIMIT 1`,
+            [tokenHash]
+        );
+
+        if (rows.length === 0) {
+            return res.status(400).json({
+                message: 'This password reset link is invalid or has expired.'
+            });
+        }
+
+        const resetToken = rows[0];
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        await pool.promise().query(
+            `UPDATE users
+             SET password = ?
+             WHERE id = ?`,
+            [hashedPassword, resetToken.user_id]
+        );
+
+        await pool.promise().query(
+            `UPDATE password_reset_tokens
+             SET used_at = NOW()
+             WHERE id = ?`,
+            [resetToken.id]
+        );
+
+        res.json({
+            message: 'Password has been updated successfully.'
+        });
+    } catch (error) {
+        console.error('Could not reset password:', error);
+        res.status(500).json({
+            message: 'Could not reset password.'
+        });
+    }
+});
+
+
 
 // Starta servern
 const PORT = process.env.PORT || 3000;

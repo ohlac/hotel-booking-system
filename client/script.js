@@ -88,6 +88,159 @@ if (loginForm) {
   });
 }
 
+// Glömt lösenord
+const forgotPasswordForm = document.querySelector('.forgot-password-form');
+
+if (forgotPasswordForm) {
+  const forgotEmailInput = document.getElementById('forgot-email');
+  const forgotMessage = document.getElementById('forgot-password-message');
+  const forgotButton = forgotPasswordForm.querySelector('button[type="submit"]');
+
+  function setForgotMessage(message, type = '') {
+    forgotMessage.classList.remove('success', 'error');
+    if (type) forgotMessage.classList.add(type);
+    forgotMessage.textContent = message;
+  }
+
+  forgotPasswordForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = forgotEmailInput.value.trim().toLowerCase();
+
+    if (!email) {
+      setForgotMessage('Please enter your email address.', 'error');
+      return;
+    }
+
+    try {
+      forgotButton.disabled = true;
+      forgotButton.textContent = 'Sending...';
+
+      const response = await fetch(`${API_länk}/api/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const result = await response.json();
+
+      setForgotMessage(
+        result.message || 'If an account exists with that email, a password reset link has been sent.',
+        response.ok ? 'success' : 'error'
+      );
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      setForgotMessage('Something went wrong. Please try again.', 'error');
+    } finally {
+      forgotButton.disabled = false;
+      forgotButton.textContent = 'Send reset link';
+    }
+  });
+}
+
+// Återställ lösenord
+const resetPasswordForm = document.querySelector('.reset-password-form');
+
+if (resetPasswordForm) {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+
+  const passwordInput = document.getElementById('reset-password');
+  const confirmPasswordInput = document.getElementById('reset-confirm-password');
+  const resetMessage = document.getElementById('reset-password-message');
+  const resetButton = document.getElementById('reset-password-submit');
+
+  function setResetMessage(message, type = '') {
+    resetMessage.classList.remove('success', 'error');
+    if (type) resetMessage.classList.add(type);
+    resetMessage.textContent = message;
+  }
+
+  function getPasswordError(password) {
+    if (password.length < 8) return 'Password must be at least 8 characters.';
+    if (!/[A-Z]/.test(password)) return 'Password must include at least one uppercase letter.';
+    if (!/[a-z]/.test(password)) return 'Password must include at least one lowercase letter.';
+    if (!/\d/.test(password)) return 'Password must include at least one number.';
+    return '';
+  }
+
+  async function verifyResetToken() {
+    if (!token) {
+      setResetMessage('Reset token is missing. Please request a new reset link.', 'error');
+      resetButton.disabled = true;
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_länk}/api/reset-password/${encodeURIComponent(token)}`);
+      const result = await response.json();
+
+      if (!response.ok || !result.valid) {
+        setResetMessage(result.message || 'This reset link is invalid or has expired.', 'error');
+        resetButton.disabled = true;
+      }
+    } catch (error) {
+      console.error('Reset token verification error:', error);
+      setResetMessage('Could not verify reset link. Please try again.', 'error');
+      resetButton.disabled = true;
+    }
+  }
+
+  verifyResetToken();
+
+  resetPasswordForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const password = passwordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+
+    const passwordError = getPasswordError(password);
+
+    if (passwordError) {
+      setResetMessage(passwordError, 'error');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setResetMessage('Passwords do not match.', 'error');
+      return;
+    }
+
+    try {
+      resetButton.disabled = true;
+      resetButton.textContent = 'Updating...';
+
+      const response = await fetch(`${API_länk}/api/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setResetMessage(result.message || 'Could not update password.', 'error');
+        resetButton.disabled = false;
+        resetButton.textContent = 'Update password';
+        return;
+      }
+
+      setResetMessage('Password updated successfully. Redirecting to login...', 'success');
+
+      setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 1200);
+    } catch (error) {
+      console.error('Reset password error:', error);
+      setResetMessage('Something went wrong. Please try again.', 'error');
+      resetButton.disabled = false;
+      resetButton.textContent = 'Update password';
+    }
+  });
+}
+
+
+
 
 // Registrering
 const registerForm = document.querySelector('.register-form');

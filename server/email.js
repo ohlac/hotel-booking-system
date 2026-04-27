@@ -158,9 +158,38 @@ async function sendUserUpdatedEmail({ to, fullName }) {
     });
 }
 
+async function sendPasswordResetEmail({ to, fullName, resetLink }) {
+    const safeName = escapeHtml(fullName || 'there');
+    const safeResetLink = escapeHtml(resetLink);
+
+    return sendEmail({
+        to,
+        subject: 'Reset your Hotel Booking password',
+        text:
+            `Hi ${fullName || 'there'},\n\n` +
+            `You requested a password reset for your Hotel Booking account.\n\n` +
+            `Use this link to reset your password:\n${resetLink}\n\n` +
+            `This link is valid for 30 minutes.\n\n` +
+            `If you did not request this, you can ignore this email.`,
+        html: `
+            <h2>Reset your password</h2>
+            <p>Hi ${safeName},</p>
+            <p>You requested a password reset for your Hotel Booking account.</p>
+            <p>
+                <a href="${safeResetLink}" style="display:inline-block;padding:12px 18px;background:#d4af37;color:#111;text-decoration:none;border-radius:8px;font-weight:bold;">
+                    Reset password
+                </a>
+            </p>
+            <p>This link is valid for <strong>30 minutes</strong>.</p>
+            <p>If you did not request this, you can ignore this email.</p>
+        `
+    });
+}
+
 module.exports = {
     sendRegistrationEmail,
     sendBookingConfirmedEmail,
     sendBookingCancelledEmail,
-    sendUserUpdatedEmail
+    sendUserUpdatedEmail,
+    sendPasswordResetEmail
 };

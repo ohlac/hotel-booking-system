@@ -1710,9 +1710,46 @@ flex-wrap:wrap;
   transform: none;
 }
 
+/* Forgot password / reset password */
+.login-links {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.auth-message {
+  margin: 18px auto 0;
+  max-width: 720px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(245, 230, 211, 0.85);
+}
+
+.auth-message.success {
+  color: #9ff0b8;
+}
+
+.auth-message.error {
+  color: #ff9b9b;
+}
+
+.search-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
 
 
-/* Design för mobiler */
+
+
+
+
+
+
+/* DESIGN FÖR MOBILER */
 @media(max-width:900px){
 
   /*Header*/
