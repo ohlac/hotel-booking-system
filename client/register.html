@@ -76,29 +76,97 @@
       </section>
 
       <section class="login-box">
-        <form class="register-form">
+        <form class="register-form" id="register-form" novalidate>
 
-          <div class="login-left">
-            <label data-i18n="email">E-Mail:</label>
-            <input type="email" id="reg-email"class="real-input" required>
-
-            <label data-i18n="username">Username:</label>
-            <input type="text" id="reg-username"class="real-input" required>
-
-            <label data-i18n="fullName">Full Name:</label>
-            <input type="text" id="reg-fullname"class="real-input" required>
-
-            <label data-i18n="password">Password:</label>
-            <input type="password" id="reg-password" class="real-input" required>
-
-            <label data-i18n="repeatPassword">Repeat Password:</label>
-            <input type="password" id="reg-confirm-password" class="real-input" required>
+          <div class="login-left register-left">
+            <label for="reg-email" data-i18n="email">E-Mail:</label>
+            <div class="field-group">
+              <input 
+                type="email" 
+                id="reg-email" 
+                name="email"
+                class="real-input" 
+                autocomplete="email"
+                required
+                aria-describedby="reg-email-message"
+              >
+              <small id="reg-email-message" class="field-message"></small>
+            </div>
+        
+            <label for="reg-username" data-i18n="username">Username:</label>
+            <div class="field-group">
+              <input 
+                type="text" 
+                id="reg-username" 
+                name="username"
+                class="real-input" 
+                autocomplete="username"
+                minlength="3"
+                maxlength="20"
+                pattern="[A-Za-z0-9_]{3,20}"
+                required
+                aria-describedby="reg-username-message"
+              >
+              <small id="reg-username-message" class="field-message">
+                3-20 characters. Letters, numbers and underscore only.
+              </small>
+            </div>
+        
+            <label for="reg-fullname" data-i18n="fullName">Full Name:</label>
+            <div class="field-group">
+              <input 
+                type="text" 
+                id="reg-fullname" 
+                name="fullName"
+                class="real-input" 
+                autocomplete="name"
+                minlength="2"
+                required
+                aria-describedby="reg-fullname-message"
+              >
+              <small id="reg-fullname-message" class="field-message"></small>
+            </div>
+        
+            <label for="reg-password" data-i18n="password">Password:</label>
+            <div class="field-group">
+              <input 
+                type="password" 
+                id="reg-password" 
+                name="password"
+                class="real-input" 
+                autocomplete="new-password"
+                minlength="8"
+                required
+                aria-describedby="reg-password-message"
+              >
+              <small id="reg-password-message" class="field-message">
+                At least 8 characters, including uppercase, lowercase and a number.
+              </small>
+            </div>
+        
+            <label for="reg-confirm-password" data-i18n="repeatPassword">Repeat Password:</label>
+            <div class="field-group">
+              <input 
+                type="password" 
+                id="reg-confirm-password" 
+                name="confirmPassword"
+                class="real-input" 
+                autocomplete="new-password"
+                minlength="8"
+                required
+                aria-describedby="reg-confirm-password-message"
+              >
+              <small id="reg-confirm-password-message" class="field-message"></small>
+            </div>
           </div>
-
+        
           <div class="login-right">
-            <button type="submit"class="search-btn" data-i18n="registerBtn">Register</button>
+            <button type="submit" class="search-btn" id="register-submit" data-i18n="registerBtn">
+              Register
+            </button>
+            <p id="register-form-message" class="form-message" role="status"></p>
           </div>
-
+        
         </form>
       </section>
 

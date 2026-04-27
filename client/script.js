@@ -87,39 +87,300 @@ if (loginForm) {
     }
   });
 }
+
+
 // Registrering
 const registerForm = document.querySelector('.register-form');
+
 if (registerForm) {
-  registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('reg-email').value;
-    const username = document.getElementById('reg-username').value;
-    const fullName = document.getElementById('reg-fullname').value;
-    const password = document.getElementById('reg-password').value;
-    const confirmPassword = document.getElementById('reg-confirm-password').value;
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+  const emailInput = document.getElementById('reg-email');
+  const usernameInput = document.getElementById('reg-username');
+  const fullNameInput = document.getElementById('reg-fullname');
+  const passwordInput = document.getElementById('reg-password');
+  const confirmPasswordInput = document.getElementById('reg-confirm-password');
+  const submitButton = document.getElementById('register-submit');
+  const formMessage = document.getElementById('register-form-message');
+
+  const emailMessage = document.getElementById('reg-email-message');
+  const usernameMessage = document.getElementById('reg-username-message');
+  const fullNameMessage = document.getElementById('reg-fullname-message');
+  const passwordMessage = document.getElementById('reg-password-message');
+  const confirmPasswordMessage = document.getElementById('reg-confirm-password-message');
+
+  let checkUserTimeout = null;
+
+  function setFieldState(input, messageElement, message, state) {
+    input.classList.remove('input-error', 'input-success');
+    messageElement.classList.remove('error', 'success');
+
+    if (state === 'error') {
+      input.classList.add('input-error');
+      messageElement.classList.add('error');
+    }
+
+    if (state === 'success') {
+      input.classList.add('input-success');
+      messageElement.classList.add('success');
+    }
+
+    messageElement.textContent = message || '';
+  }
+
+  function setFormMessage(message, state) {
+    formMessage.classList.remove('error', 'success');
+
+    if (state === 'error') {
+      formMessage.classList.add('error');
+    }
+
+    if (state === 'success') {
+      formMessage.classList.add('success');
+    }
+
+    formMessage.textContent = message || '';
+  }
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function isValidUsername(username) {
+    return /^[a-zA-Z0-9_]{3,20}$/.test(username);
+  }
+
+  function getPasswordError(password) {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters.';
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      return 'Password must include at least one uppercase letter.';
+    }
+
+    if (!/[a-z]/.test(password)) {
+      return 'Password must include at least one lowercase letter.';
+    }
+
+    if (!/\d/.test(password)) {
+      return 'Password must include at least one number.';
+    }
+
+    return '';
+  }
+
+  function validateLocalFields() {
+    let isValid = true;
+
+    const email = emailInput.value.trim().toLowerCase();
+    const username = usernameInput.value.trim();
+    const fullName = fullNameInput.value.trim();
+    const password = passwordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+
+    if (!email) {
+      setFieldState(emailInput, emailMessage, 'Email is required.', 'error');
+      isValid = false;
+    } else if (!isValidEmail(email)) {
+      setFieldState(emailInput, emailMessage, 'Please enter a valid email address.', 'error');
+      isValid = false;
+    } else {
+      setFieldState(emailInput, emailMessage, 'Email format looks good.', 'success');
+    }
+
+    if (!username) {
+      setFieldState(usernameInput, usernameMessage, 'Username is required.', 'error');
+      isValid = false;
+    } else if (!isValidUsername(username)) {
+      setFieldState(
+        usernameInput,
+        usernameMessage,
+        'Username must be 3-20 characters and may only contain letters, numbers and underscores.',
+        'error'
+      );
+      isValid = false;
+    } else {
+      setFieldState(usernameInput, usernameMessage, 'Username format looks good.', 'success');
+    }
+
+    if (!fullName) {
+      setFieldState(fullNameInput, fullNameMessage, 'Full name is required.', 'error');
+      isValid = false;
+    } else if (fullName.length < 2) {
+      setFieldState(fullNameInput, fullNameMessage, 'Full name must be at least 2 characters.', 'error');
+      isValid = false;
+    } else {
+      setFieldState(fullNameInput, fullNameMessage, '', 'success');
+    }
+
+    const passwordError = getPasswordError(password);
+    if (passwordError) {
+      setFieldState(passwordInput, passwordMessage, passwordError, 'error');
+      isValid = false;
+    } else {
+      setFieldState(passwordInput, passwordMessage, 'Password looks good.', 'success');
+    }
+
+    if (!confirmPassword) {
+      setFieldState(confirmPasswordInput, confirmPasswordMessage, 'Please repeat your password.', 'error');
+      isValid = false;
+    } else if (password !== confirmPassword) {
+      setFieldState(confirmPasswordInput, confirmPasswordMessage, 'Passwords do not match.', 'error');
+      isValid = false;
+    } else {
+      setFieldState(confirmPasswordInput, confirmPasswordMessage, 'Passwords match.', 'success');
+    }
+
+    return isValid;
+  }
+
+  async function checkUserAvailability() {
+    const email = emailInput.value.trim().toLowerCase();
+    const username = usernameInput.value.trim();
+
+    if (!isValidEmail(email) && !isValidUsername(username)) {
       return;
     }
+
     try {
-      const response = await fetch(`${API_länk}/api/register`, {
+      const params = new URLSearchParams();
+
+      if (isValidEmail(email)) {
+        params.append('email', email);
+      }
+
+      if (isValidUsername(username)) {
+        params.append('username', username);
+      }
+
+      const response = await fetch(`${API_lnk}/api/check-user?${params.toString()}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        return;
+      }
+
+      if (isValidEmail(email)) {
+        if (result.emailExists) {
+          setFieldState(emailInput, emailMessage, 'An account with this email already exists.', 'error');
+        } else {
+          setFieldState(emailInput, emailMessage, 'Email is available.', 'success');
+        }
+      }
+
+      if (isValidUsername(username)) {
+        if (result.usernameExists) {
+          setFieldState(usernameInput, usernameMessage, 'This username is already taken.', 'error');
+        } else {
+          setFieldState(usernameInput, usernameMessage, 'Username is available.', 'success');
+        }
+      }
+    } catch (error) {
+      console.error('Could not check user availability:', error);
+    }
+  }
+
+  function scheduleAvailabilityCheck() {
+    clearTimeout(checkUserTimeout);
+
+    checkUserTimeout = setTimeout(() => {
+      checkUserAvailability();
+    }, 450);
+  }
+
+  emailInput.addEventListener('input', () => {
+    setFormMessage('', '');
+    validateLocalFields();
+    scheduleAvailabilityCheck();
+  });
+
+  usernameInput.addEventListener('input', () => {
+    setFormMessage('', '');
+    validateLocalFields();
+    scheduleAvailabilityCheck();
+  });
+
+  fullNameInput.addEventListener('input', () => {
+    setFormMessage('', '');
+    validateLocalFields();
+  });
+
+  passwordInput.addEventListener('input', () => {
+    setFormMessage('', '');
+    validateLocalFields();
+  });
+
+  confirmPasswordInput.addEventListener('input', () => {
+    setFormMessage('', '');
+    validateLocalFields();
+  });
+
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    setFormMessage('', '');
+
+    const localValid = validateLocalFields();
+
+    if (!localValid) {
+      setFormMessage('Please fix the highlighted fields before registering.', 'error');
+      return;
+    }
+
+    if (
+      emailInput.classList.contains('input-error') ||
+      usernameInput.classList.contains('input-error')
+    ) {
+      setFormMessage('Please fix the highlighted fields before registering.', 'error');
+      return;
+    }
+
+    const email = emailInput.value.trim().toLowerCase();
+    const username = usernameInput.value.trim();
+    const fullName = fullNameInput.value.trim();
+    const password = passwordInput.value;
+
+    try {
+      submitButton.disabled = true;
+      submitButton.textContent = 'Registering...';
+
+      const response = await fetch(`${API_lnk}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, username, fullName, password })
       });
+
       const result = await response.json();
+
       if (response.ok) {
-        alert("Registration successful!");
-        window.location.href = 'login.html';
-      } else {
-        alert("Registration failed: " + result.message);
+        setFormMessage('Registration successful! Redirecting to login...', 'success');
+
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 900);
+
+        return;
       }
+
+      if (result.field === 'email') {
+        setFieldState(emailInput, emailMessage, result.message, 'error');
+      }
+
+      if (result.field === 'username') {
+        setFieldState(usernameInput, usernameMessage, result.message, 'error');
+      }
+
+      setFormMessage(result.message || 'Registration failed.', 'error');
     } catch (error) {
       console.error('Registration error:', error);
-      alert("An error occurred during registration.");
+      setFormMessage('An error occurred during registration. Please try again.', 'error');
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Register';
     }
   });
 }
+
+
 // ==========================================
 // SÖK, BOKA OCH VISA RUM
 // ==========================================

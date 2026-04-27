@@ -454,20 +454,109 @@ app.delete('/api/admin/bookings/:id', async (req, res) => {
     }
 });
 
+// Kontrollera om e-post eller anvndarnamn redan finns
+app.get('/api/check-user', async (req, res) => {
+    const email = String(req.query.email || '').trim().toLowerCase();
+    const username = String(req.query.username || '').trim();
 
+    try {
+        const result = {
+            emailExists: false,
+            usernameExists: false
+        };
+
+        if (email) {
+            const [emailRows] = await pool.promise().query(
+                'SELECT id FROM users WHERE LOWER(email) = ? LIMIT 1',
+                [email]
+            );
+            result.emailExists = emailRows.length > 0;
+        }
+
+        if (username) {
+            const [usernameRows] = await pool.promise().query(
+                'SELECT id FROM users WHERE username = ? LIMIT 1',
+                [username]
+            );
+            result.usernameExists = usernameRows.length > 0;
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('Could not check user:', error);
+        res.status(500).json({ message: 'Could not check user' });
+    }
+});
 
 // Registrera
 app.post('/api/register', async (req, res) => {
-    const { email, username, fullName, password } = req.body;
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const username = String(req.body.username || '').trim();
+    const fullName = String(req.body.fullName || '').trim();
+    const password = String(req.body.password || '');
 
     try {
-        const [existingUser] = await pool.promise().query(
-            'SELECT * FROM users WHERE username = ? OR email = ?',
+        if (!email || !username || !fullName || !password) {
+            return res.status(400).json({
+                message: 'All fields are required.'
+            });
+        }
+
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+            return res.status(400).json({
+                message: 'Please enter a valid email address.'
+            });
+        }
+
+        const usernamePattern = /^[a-zA-Z0-9_]{3,20}$/;
+        if (!usernamePattern.test(username)) {
+            return res.status(400).json({
+                message: 'Username must be 3-20 characters and may only contain letters, numbers and underscores.'
+            });
+        }
+
+        if (fullName.length < 2) {
+            return res.status(400).json({
+                message: 'Full name must be at least 2 characters.'
+            });
+        }
+
+        const hasMinLength = password.length >= 8;
+        const hasUppercase = /[A-Z]/.test(password);
+        const hasLowercase = /[a-z]/.test(password);
+        const hasNumber = /\d/.test(password);
+
+        if (!hasMinLength || !hasUppercase || !hasLowercase || !hasNumber) {
+            return res.status(400).json({
+                message: 'Password must be at least 8 characters and include uppercase, lowercase and a number.'
+            });
+        }
+
+        const [existingUsers] = await pool.promise().query(
+            `SELECT username, email
+             FROM users
+             WHERE username = ? OR LOWER(email) = ?
+             LIMIT 1`,
             [username, email]
         );
 
-        if (existingUser.length > 0) {
-            return res.status(400).json({ error: 'Username or email already exists' });
+        if (existingUsers.length > 0) {
+            const existingUser = existingUsers[0];
+
+            if (existingUser.email.toLowerCase() === email) {
+                return res.status(409).json({
+                    field: 'email',
+                    message: 'An account with this email already exists.'
+                });
+            }
+
+            if (existingUser.username === username) {
+                return res.status(409).json({
+                    field: 'username',
+                    message: 'This username is already taken.'
+                });
+            }
         }
 
         await pool.promise().query(
@@ -475,16 +564,26 @@ app.post('/api/register', async (req, res) => {
             [email, username, fullName, password, 'user']
         );
 
-        await sendRegistrationEmail({
-            email,
-            username,
-            fullName
-        });
+        try {
+            if (typeof sendRegistrationEmail === 'function') {
+                await sendRegistrationEmail({
+                    email,
+                    username,
+                    fullName
+                });
+            }
+        } catch (emailError) {
+            console.error('User was registered, but registration email failed:', emailError);
+        }
 
-        res.status(201).json({ message: 'User registered successfully' });
+        res.status(201).json({
+            message: 'User registered successfully.'
+        });
     } catch (error) {
         console.error('Could not register user:', error);
-        res.status(500).json({ error: 'Could not register user' });
+        res.status(500).json({
+            message: 'Could not register user.'
+        });
     }
 });
 
