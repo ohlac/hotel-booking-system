@@ -789,43 +789,108 @@ app.post("/api/logout", (req, res) => {
   });
 });
 
-// Uppdatera anvndarinstllningar
-app.put("/api/update-user", async (req, res) => {
+
+// Hämta inloggad användares profil
+app.get('/api/user/profile', async (req, res) => {
   if (!req.session.user) {
-    return res.status(401).json({ message: "Not logged in" });
+      return res.status(401).json({ message: "Not logged in" });
+  }
+
+  try {
+      const [rows] = await pool.promise().query(
+          `SELECT id, username, email, full_name, role, created_at
+           FROM users
+           WHERE id = ?
+           LIMIT 1`,
+          [req.session.user.id]
+      );
+
+      if (rows.length === 0) {
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(rows[0]);
+  } catch (error) {
+      console.error("Could not fetch user profile:", error);
+      res.status(500).json({ message: "Could not fetch user profile" });
+  }
+});
+
+
+// Uppdatera anvndarinstllningar
+app.put('/api/update-user', async (req, res) => {
+  if (!req.session.user) {
+      return res.status(401).json({ message: "Not logged in" });
   }
 
   const userId = req.session.user.id;
-  const { email, password } = req.body;
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const currentPassword = String(req.body.currentPassword || '');
+  const newPassword = String(req.body.newPassword || '');
 
   try {
-    await pool
-      .promise()
-      .query("UPDATE users SET email = ?, password = ? WHERE id = ?", [
-        email,
-        password,
-        userId,
-      ]);
+      if (!email) {
+          return res.status(400).json({ message: "Email is required." });
+      }
 
-    const [userRows] = await pool.promise().query(
-      `SELECT email, full_name
-             FROM users
-             WHERE id = ?
-             LIMIT 1`,
-      [userId],
-    );
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(email)) {
+          return res.status(400).json({ message: "Please enter a valid email address." });
+      }
 
-    if (userRows.length > 0) {
-      await sendUserUpdatedEmail({
-        to: userRows[0].email,
-        fullName: userRows[0].full_name,
-      });
-    }
+      const [existingEmail] = await pool.promise().query(
+          `SELECT id FROM users WHERE LOWER(email) = ? AND id <> ? LIMIT 1`,
+          [email, userId]
+      );
 
-    res.json({ message: "User updated successfully" });
+      if (existingEmail.length > 0) {
+          return res.status(409).json({ message: "That email is already used by another account." });
+      }
+
+      const [userRows] = await pool.promise().query(
+          `SELECT password FROM users WHERE id = ? LIMIT 1`,
+          [userId]
+      );
+
+      if (userRows.length === 0) {
+          return res.status(404).json({ message: "User not found." });
+      }
+
+      if (newPassword) {
+          if (!currentPassword) {
+              return res.status(400).json({ message: "Current password is required when changing password." });
+          }
+
+          if (currentPassword !== userRows[0].password) {
+              return res.status(401).json({ message: "Current password is incorrect." });
+          }
+
+          if (
+              newPassword.length < 8 ||
+              !/[A-Z]/.test(newPassword) ||
+              !/[a-z]/.test(newPassword) ||
+              !/\d/.test(newPassword)
+          ) {
+              return res.status(400).json({
+                  message: "New password must be at least 8 characters and include uppercase, lowercase and a number."
+              });
+          }
+
+          await pool.promise().query(
+              `UPDATE users SET email = ?, password = ? WHERE id = ?`,
+              [email, newPassword, userId]
+          );
+      } else {
+          await pool.promise().query(
+              `UPDATE users SET email = ? WHERE id = ?`,
+              [email, userId]
+          );
+      }
+
+      res.json({ message: "Settings updated successfully." });
   } catch (error) {
-    console.error("Could not update user:", error);
-    res.status(500).json({ message: "Server error" });
+      console.error("Could not update user:", error);
+      res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -862,22 +927,39 @@ app.delete("/api/admin/rooms/:id", async (req, res) => {
   res.json({ message: "Room deleted" });
 });
 
-app.get("/api/admin/stats", async (req, res) => {
-  if (!req.session.user || req.session.user.role !== "admin") {
-    return res.status(403).json({ message: "Admin only" });
+app.get('/api/admin/stats', async (req, res) => {
+  if (!req.session.user || req.session.user.role !== 'admin') {
+      return res.status(403).json({ message: "Admin only" });
   }
 
-  const [rooms] = await pool
-    .promise()
-    .query("SELECT COUNT(*) as total FROM rooms");
-  const [bookings] = await pool
-    .promise()
-    .query("SELECT COUNT(*) as total FROM bookings");
+  try {
+      const [rooms] = await pool.promise().query("SELECT COUNT(*) as total FROM rooms");
+      const [bookings] = await pool.promise().query("SELECT COUNT(*) as total FROM bookings");
 
-  res.json({
-    rooms: rooms[0].total,
-    bookings: bookings[0].total,
-  });
+      const today = new Date().toISOString().slice(0, 10);
+
+      const [availableToday] = await pool.promise().query(
+          `SELECT COUNT(*) AS total
+           FROM rooms r
+           WHERE NOT EXISTS (
+              SELECT 1
+              FROM bookings b
+              WHERE b.room_id = r.id
+                AND b.start_date <= ?
+                AND b.end_date > ?
+           )`,
+          [today, today]
+      );
+
+      res.json({
+          rooms: rooms[0].total,
+          bookings: bookings[0].total,
+          availableToday: availableToday[0].total
+      });
+  } catch (error) {
+      console.error("Could not load admin stats:", error);
+      res.status(500).json({ message: "Could not load admin stats." });
+  }
 });
 
 // API för att lägga till ett rum (ADMIN)
@@ -1078,6 +1160,46 @@ app.post("/api/reset-password", async (req, res) => {
     });
   }
 });
+
+
+app.get('/api/admin/rooms-with-bookings', async (req, res) => {
+  if (!req.session.user || req.session.user.role !== 'admin') {
+      return res.status(403).json({ message: "Admin only" });
+  }
+
+  try {
+      const [rooms] = await pool.promise().query(
+          `SELECT id, room_number, type, price_per_night, description
+           FROM rooms
+           ORDER BY room_number ASC`
+      );
+
+      const [bookings] = await pool.promise().query(
+          `SELECT 
+              b.id AS booking_id,
+              b.room_id,
+              b.start_date,
+              b.end_date,
+              u.username,
+              u.email,
+              u.full_name
+           FROM bookings b
+           JOIN users u ON b.user_id = u.id
+           ORDER BY b.start_date ASC`
+      );
+
+      const roomsWithBookings = rooms.map(room => ({
+          ...room,
+          bookings: bookings.filter(booking => booking.room_id === room.id)
+      }));
+
+      res.json(roomsWithBookings);
+  } catch (error) {
+      console.error("Could not load rooms with bookings:", error);
+      res.status(500).json({ message: "Could not load rooms with bookings." });
+  }
+});
+
 
 // Starta servern
 const PORT = process.env.PORT || 3000;

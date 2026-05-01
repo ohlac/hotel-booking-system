@@ -120,6 +120,29 @@
           Loading Rooms...
         </p>
       </section>
+
+      <div id="room-details-modal" class="room-details-modal" aria-hidden="true">
+        <div class="room-details-content">
+          <button class="room-modal-close" type="button" onclick="closeRoomDetails()">×</button>
+      
+          <div class="room-gallery">
+            <button class="room-gallery-btn" type="button" onclick="changeRoomImage(-1)">‹</button>
+            <img id="room-modal-image" src="" alt="Room image">
+            <button class="room-gallery-btn" type="button" onclick="changeRoomImage(1)">›</button>
+          </div>
+      
+          <div class="room-details-text">
+            <h2 id="room-modal-title"></h2>
+            <p id="room-modal-description"></p>
+            <p id="room-modal-price"></p>
+            <p id="room-modal-status"></p>
+      
+            <button id="room-modal-book-btn" class="search-btn" type="button">
+              Book this room
+            </button>
+          </div>
+        </div>
+      </div>
       
       <footer class="footer-bar">
         <div class="footer-col">

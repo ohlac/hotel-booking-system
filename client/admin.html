@@ -71,14 +71,16 @@
       </section>
       <section class="admin-layout">
         <aside class="admin-side">
-          <a class="admin-side-btn active"
-          onclick="showAdminBookings()"
+          <a id="admin-bookings-tab" class="admin-side-btn active"
+          href="#"
+          onclick="showAdminBookings(event)"
           data-i18n="adminCurrentBookings">
           Current Bookings
           </a>
          
-          <a class="admin-side-btn"
-          onclick="showAdminRooms()"
+          <a id="admin-rooms-tab" class="admin-side-btn"
+          href="#"
+          onclick="showAdminRooms(event)"
           data-i18n="adminManageRooms">
           Manage Rooms
           </a>
@@ -101,13 +103,12 @@
               </div>
             </div>
            
-            <div class="admin-stat-box">
-              <div class="admin-stat-title" data-i18n="adminAvailableRooms">
-                Total Rooms
-              </div>
-              <div class="admin-stat-value" id= "available-rooms">
-                0
-              </div>
+            <div class="admin-stat-title">
+              Rooms Available Today
+            </div>
+            <div class="admin-stat-value" id="available-rooms">
+              0
+            </div>
             </div>
           </div>
          
@@ -122,13 +123,19 @@
 
             <div class="add-room-form">
               <input type="text" id="room-number" placeholder="Room number">
-              <input type="text" id="room-type" placeholder="Room type">
+              <select id="room-type">
+                <option value="">Room type</option>
+                <option value="Single">Single</option>
+                <option value="Double">Double</option>
+                <option value="Suite">Suite</option>
+              </select>
               <input type="number" id="room-price" placeholder="Price per night">
               <input id="room-description" placeholder="Room description">
 
               <button class="add-room-btn" onclick="addRoom()">
                 Add Room
               </button>
+              <p id="add-room-message" class="admin-message"></p>
             </div>
 
             <div class="admin-rooms"></div>

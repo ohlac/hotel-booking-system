@@ -72,10 +72,8 @@
       <section class="user-layout">
 
         <aside class="user-side">
-          <a class="active" href="#" data-i18n="userMyBookings" onclick="showBookings()">My Bookings</a>
-          <a href="#" data-i18n="userSettings" onclick="showSettings()"> User Settings</a>
-
-
+          <a id="user-bookings-tab" class="active" href="#" data-i18n="userMyBookings" onclick="showBookings(event)">My Bookings</a>
+          <a id="user-settings-tab" href="#" data-i18n="userSettings" onclick="showSettings(event)">User Settings</a>
         </aside>
 
         <div class="page-white">
@@ -90,17 +88,54 @@
               </div>
             </div>
             
-            <div id="user-settings" style="display:none;">
+
+            <!--User Settings-->
+            <div id="user-settings" class="settings-panel" style="display:none;">
               <h2>User Settings</h2>
-
-              <label>Email</label>
-              <input type="email" id="user-email">
-
-           
-              <label>Password</label>
-              <input type="password" id="user-password">
-              <button id="save-user-settings">Save Changes</button>
-              <p id="settings-message"></p>
+              <p class="settings-help">
+                Update your contact email or change your password. Leave password fields empty if you only want to update your email.
+              </p>
+            
+              <div class="settings-grid">
+                <label for="user-email">Email</label>
+                <input 
+                  type="email" 
+                  id="user-email" 
+                  class="real-input"
+                  autocomplete="email"
+                  placeholder="your.email@example.com"
+                >
+            
+                <label for="current-password">Current password</label>
+                <input 
+                  type="password" 
+                  id="current-password" 
+                  class="real-input"
+                  autocomplete="current-password"
+                  placeholder="Required when changing password"
+                >
+            
+                <label for="new-password">New password</label>
+                <input 
+                  type="password" 
+                  id="new-password" 
+                  class="real-input"
+                  autocomplete="new-password"
+                  placeholder="At least 8 characters"
+                >
+            
+                <label for="confirm-new-password">Repeat new password</label>
+                <input 
+                  type="password" 
+                  id="confirm-new-password" 
+                  class="real-input"
+                  autocomplete="new-password"
+                  placeholder="Repeat new password"
+                >
+              </div>
+            
+              <button id="save-user-settings" class="search-btn" type="button">Save Changes</button>
+              <p id="settings-message" class="settings-message" role="status"></p>
             </div>
 
 

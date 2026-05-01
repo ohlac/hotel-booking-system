@@ -727,46 +727,147 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-async function getRooms(start = "", end = "", type = "") {
-  const roomsContainer = document.getElementById("rooms-container");
+let currentRoomDetails = null;
+let currentRoomImages = [];
+let currentRoomImageIndex = 0;
+
+function getRoomImages(room) {
+  const roomId = Number(room.id);
+
+  const imageSets = {
+    Single: ['1.jpg', '2.jpg', '3.jpg'],
+    Double: ['4.jpg', '5.jpg', '6.jpg'],
+    Suite: ['7.jpg', '8.jpg', '9.jpg']
+  };
+
+  const fallback = imageSets[room.type] || ['1.jpg', '2.jpg', '3.jpg'];
+
+  // Gör att olika rum av samma typ får lite olika första bild
+  const offset = roomId % fallback.length;
+  return [...fallback.slice(offset), ...fallback.slice(0, offset)].map(file => `images/${file}`);
+}
+
+function getRoomPreviewImage(room) {
+  return getRoomImages(room)[0];
+}
+
+async function getRooms(start = '', end = '', type = '') {
+  const roomsContainer = document.getElementById('rooms-container');
   if (!roomsContainer) return;
 
   try {
     let url = `${API_länk}/api/rooms`;
     if (start && end) {
-      url += `?start=${start}&end=${end}&type=${type}`;
+      url += `?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&type=${encodeURIComponent(type)}`;
     }
+
     const response = await fetch(url);
     const rooms = await response.json();
-    roomsContainer.innerHTML = ""; // Tömmer rutan
-    if (rooms.length === 0) {
+
+    roomsContainer.innerHTML = '';
+
+    if (!Array.isArray(rooms) || rooms.length === 0) {
       roomsContainer.innerHTML = `<p style="text-align:center; width:100%;">No available rooms found for these dates.</p>`;
       return;
     }
-    rooms.forEach((room) => {
-      let imagePath = "single.jpg";
-      if (room.type === "Double") imagePath = "double.jpg";
-      if (room.type === "Suite") imagePath = "suite.jpg";
-      const roomCard = document.createElement("article");
-      roomCard.classList.add("room-card");
+
+    rooms.forEach(room => {
+      const previewImage = getRoomPreviewImage(room);
+
+      const roomCard = document.createElement('article');
+      roomCard.classList.add('room-card', 'clickable-room-card');
+
       roomCard.innerHTML = `
-               <div class="room-text">
-                  <h3 class="room-title">Room ${room.room_number} - ${room.type}</h3>
-                  <p class="room-desc">${room.description}</p>
-                  <p class="room-desc" style="font-weight: bold; color: #d4af37;">Price: ${room.price_per_night} kr/night</p>
-                  <button class="search-btn" onclick="bookRoom(${room.id})">Book Room</button>
-              </div>
-              <div class="room-image-container">
-                  <img src="images/rooms/${imagePath}" alt="${room.type} room" class="room-image">
-              </div>
-          `;
+        <div class="room-text">
+          <h3 class="room-title">Room ${room.room_number} - ${room.type}</h3>
+          <p class="room-desc">${room.description || 'No description available.'}</p>
+          <p class="room-desc" style="font-weight: bold; color: #d4af37;">
+            Price: ${room.price_per_night} kr/night
+          </p>
+          <button class="search-btn" type="button" onclick="event.stopPropagation(); bookRoom(${room.id})">
+            Book Room
+          </button>
+        </div>
+
+        <div class="room-image-container">
+          <img src="${previewImage}" alt="${room.type} room" class="room-image">
+        </div>
+      `;
+
+      roomCard.addEventListener('click', () => {
+        openRoomDetails(room);
+      });
+
       roomsContainer.appendChild(roomCard);
     });
   } catch (error) {
-    console.error("Fel vid hämtning av rum:", error);
+    console.error('Fel vid hämtning av rum:', error);
     roomsContainer.innerHTML = `<p style="text-align:center; color:red;">Kunde inte hämta rum.</p>`;
   }
 }
+
+function openRoomDetails(room) {
+  currentRoomDetails = room;
+  currentRoomImages = getRoomImages(room);
+  currentRoomImageIndex = 0;
+
+  const modal = document.getElementById('room-details-modal');
+  const image = document.getElementById('room-modal-image');
+  const title = document.getElementById('room-modal-title');
+  const description = document.getElementById('room-modal-description');
+  const price = document.getElementById('room-modal-price');
+  const status = document.getElementById('room-modal-status');
+  const bookBtn = document.getElementById('room-modal-book-btn');
+
+  if (!modal || !image || !title || !description || !price || !status || !bookBtn) return;
+
+  image.src = currentRoomImages[currentRoomImageIndex];
+  image.alt = `${room.type} room ${room.room_number}`;
+
+  title.textContent = `Room ${room.room_number} - ${room.type}`;
+  description.textContent = room.description || 'No description available.';
+  price.textContent = `${room.price_per_night} kr per night`;
+  status.textContent = room.status ? `Status: ${room.status}` : '';
+
+  bookBtn.onclick = () => {
+    closeRoomDetails();
+    bookRoom(room.id);
+  };
+
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+window.closeRoomDetails = function () {
+  const modal = document.getElementById('room-details-modal');
+  if (!modal) return;
+
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+};
+
+window.changeRoomImage = function (direction) {
+  const image = document.getElementById('room-modal-image');
+  if (!image || currentRoomImages.length === 0) return;
+
+  currentRoomImageIndex += direction;
+
+  if (currentRoomImageIndex < 0) {
+    currentRoomImageIndex = currentRoomImages.length - 1;
+  }
+
+  if (currentRoomImageIndex >= currentRoomImages.length) {
+    currentRoomImageIndex = 0;
+  }
+
+  image.src = currentRoomImages[currentRoomImageIndex];
+};
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    closeRoomDetails();
+  }
+});
 
 window.bookRoom = async function (roomId) {
   const startInput = document.getElementById("search-start");
@@ -1083,6 +1184,8 @@ const translations = {
     copyright: "Copyright",
   },
 };
+
+
 function setLanguage(lang) {
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
@@ -1109,47 +1212,133 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+
 // Visa användarinställningar
-function showSettings() {
+function setUserTab(activeTab) {
+  const bookingsTab = document.getElementById("user-bookings-tab");
+  const settingsTab = document.getElementById("user-settings-tab");
+
+  if (bookingsTab) bookingsTab.classList.toggle("active", activeTab === "bookings");
+  if (settingsTab) settingsTab.classList.toggle("active", activeTab === "settings");
+}
+
+function showSettings(event) {
+  if (event) event.preventDefault();
+
   document.getElementById("bookings-section").style.display = "none";
   document.getElementById("user-settings").style.display = "block";
+
+  setUserTab("settings");
+  loadUserProfile();
 }
-// visa bokningar
-function showBookings() {
+
+function showBookings(event) {
+  if (event) event.preventDefault();
+
   document.getElementById("bookings-section").style.display = "block";
   document.getElementById("user-settings").style.display = "none";
+
+  setUserTab("bookings");
 }
+
+
 // Save user settingss
+async function loadUserProfile() {
+  const emailInput = document.getElementById("user-email");
+  if (!emailInput) return;
+
+  try {
+    const response = await fetch(`${API_länk}/api/user/profile`, {
+      credentials: "include"
+    });
+
+    if (!response.ok) return;
+
+    const user = await response.json();
+    emailInput.value = user.email || "";
+  } catch (error) {
+    console.error("Could not load user profile:", error);
+  }
+}
+
+function setSettingsMessage(message, type = "") {
+  const messageEl = document.getElementById("settings-message");
+  if (!messageEl) return;
+
+  messageEl.classList.remove("success", "error");
+  if (type) messageEl.classList.add(type);
+  messageEl.textContent = message;
+}
+
 const saveBtn = document.getElementById("save-user-settings");
+
 if (saveBtn) {
   saveBtn.addEventListener("click", async () => {
-    const email = document.getElementById("user-email").value;
-    const password = document.getElementById("user-password").value;
+    const email = document.getElementById("user-email").value.trim().toLowerCase();
+    const currentPassword = document.getElementById("current-password").value;
+    const newPassword = document.getElementById("new-password").value;
+    const confirmNewPassword = document.getElementById("confirm-new-password").value;
+
+    setSettingsMessage("", "");
+
+    if (!email) {
+      setSettingsMessage("Email is required.", "error");
+      return;
+    }
+
+    if (newPassword || confirmNewPassword) {
+      if (newPassword !== confirmNewPassword) {
+        setSettingsMessage("New passwords do not match.", "error");
+        return;
+      }
+
+      if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/\d/.test(newPassword)) {
+        setSettingsMessage("New password must be at least 8 characters and include uppercase, lowercase and a number.", "error");
+        return;
+      }
+    }
+
     try {
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving...";
+
       const response = await fetch(`${API_länk}/api/update-user`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         credentials: "include",
         body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
+          email,
+          currentPassword,
+          newPassword
+        })
       });
+
       const result = await response.json();
-      if (response.ok) {
-        document.getElementById("settings-message").textContent =
-          "Settings updated successfully!";
-      } else {
-        alert("Error: " + result.message);
+
+      if (!response.ok) {
+        setSettingsMessage(result.message || "Could not update settings.", "error");
+        return;
       }
+
+      document.getElementById("current-password").value = "";
+      document.getElementById("new-password").value = "";
+      document.getElementById("confirm-new-password").value = "";
+
+      setSettingsMessage(result.message || "Settings updated successfully.", "success");
     } catch (error) {
       console.error(error);
-      alert("Something went wrong");
+      setSettingsMessage("Something went wrong. Please try again.", "error");
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Save Changes";
     }
   });
 }
+
+
 async function getUserBookings() {
   const bookingsContainer = document.querySelector("#bookings-section");
   if (!bookingsContainer) return;
@@ -1229,6 +1418,7 @@ async function adminCancelBooking(id) {
 
     alert("Booking cancelled.");
     loadAdminBookings();
+    loadAdminRooms();
     loadAdminStats();
   } catch (error) {
     console.error("Admin cancel booking error:", error);
@@ -1240,32 +1430,73 @@ async function adminCancelBooking(id) {
 async function loadAdminRooms() {
   const container = document.querySelector(".admin-rooms");
   if (!container) return;
-  const response = await fetch(`${API_länk}/api/rooms`);
-  const rooms = await response.json();
 
-  container.innerHTML = "";
-  rooms.forEach((room) => {
-    const card = document.createElement("div");
-    card.innerHTML = `
-  <div class="admin-room">
-  Room ${room.room_number} - 
-  <span class="${room.status === "Booked" ? "booked" : "available"}">
-  ${room.status}
-  </span>
-  <br>
-  Type: ${room.type}
-  <br>
-  Price: ${room.price_per_night} kr
-  <br><br>
-  <button class="delete-btn" onclick="deleteRoom(${room.id})">
-  Delete Room
-  </button>
-  </div>
-  `;
+  try {
+    const response = await fetch(`${API_länk}/api/admin/rooms-with-bookings`, {
+      credentials: "include"
+    });
 
-    container.appendChild(card);
-  });
+    const rooms = await response.json();
+
+    if (!response.ok) {
+      container.innerHTML = `<p style="color:red;">${rooms.message || "Could not load rooms."}</p>`;
+      return;
+    }
+
+    container.innerHTML = "";
+
+    rooms.forEach(room => {
+      const card = document.createElement("div");
+      card.classList.add("admin-room-card");
+
+      const bookingsHtml = room.bookings.length === 0
+        ? `<p class="admin-empty-bookings">No bookings for this room.</p>`
+        : room.bookings.map(booking => {
+            const start = new Date(booking.start_date).toLocaleDateString();
+            const end = new Date(booking.end_date).toLocaleDateString();
+
+            return `
+              <div class="admin-room-booking">
+                <div>
+                  <strong>${start} → ${end}</strong><br>
+                  Guest: ${booking.full_name || booking.username}<br>
+                  Email: ${booking.email}
+                </div>
+                <button class="cancel-btn" onclick="adminCancelBooking(${booking.booking_id})">
+                  Cancel this booking
+                </button>
+              </div>
+            `;
+          }).join("");
+
+      card.innerHTML = `
+        <div class="admin-room-header">
+          <div>
+            <h3>Room ${room.room_number} - ${room.type}</h3>
+            <p>${room.description || "No description available."}</p>
+            <p><strong>${room.price_per_night} kr/night</strong></p>
+          </div>
+
+          <button class="delete-btn" onclick="deleteRoom(${room.id})">
+            Delete Room
+          </button>
+        </div>
+
+        <div class="admin-room-bookings">
+          <h4>Bookings for this room</h4>
+          ${bookingsHtml}
+        </div>
+      `;
+
+      container.appendChild(card);
+    });
+  } catch (error) {
+    console.error("Could not load rooms:", error);
+    container.innerHTML = `<p style="color:red;">Could not load rooms.</p>`;
+  }
 }
+
+
 // Ta bort ett rum från admin-sidan
 async function deleteRoom(id) {
   if (!confirm("Delete this room?")) return;
@@ -1275,40 +1506,101 @@ async function deleteRoom(id) {
   });
   loadAdminRooms();
 }
+
+
 // Lägg till ett nytt rum (admin)
 async function addRoom() {
-  const number = document.getElementById("room-number").value;
+  const number = document.getElementById("room-number").value.trim();
   const type = document.getElementById("room-type").value;
   const price = document.getElementById("room-price").value;
-  const description = document.getElementById("room-description").value;
+  const description = document.getElementById("room-description").value.trim();
+  const message = document.getElementById("add-room-message");
 
-  if (!number || !type || !price) {
-    alert("Fill all fields");
+  function setMessage(text, status) {
+    if (!message) return;
+    message.classList.remove("success", "error");
+    if (status) message.classList.add(status);
+    message.textContent = text;
+  }
+
+  if (!number || !type || !price || !description) {
+    setMessage("Please fill in all fields.", "error");
     return;
   }
 
-  await fetch(`${API_länk}/api/admin/rooms`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify({
-      room_number: number,
-      type: type,
-      price_per_night: price,
-      description: description,
-    }),
-  });
+  if (Number(price) <= 0) {
+    setMessage("Price must be greater than 0.", "error");
+    return;
+  }
+
+  try {
+    setMessage("Adding room...", "");
+
+    const response = await fetch(`${API_länk}/api/admin/rooms`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        room_number: number,
+        type,
+        price_per_night: price,
+        description
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      setMessage(result.message || "Could not add room.", "error");
+      return;
+    }
+
+    document.getElementById("room-number").value = "";
+    document.getElementById("room-type").value = "";
+    document.getElementById("room-price").value = "";
+    document.getElementById("room-description").value = "";
+
+    setMessage(result.message || "Room added successfully.", "success");
+
+    loadAdminRooms();
+    loadAdminStats();
+  } catch (error) {
+    console.error("Could not add room:", error);
+    setMessage("Something went wrong while adding the room.", "error");
+  }
 }
-function showAdminBookings() {
+
+
+function setAdminTab(activeTab) {
+  const bookingsTab = document.getElementById("admin-bookings-tab");
+  const roomsTab = document.getElementById("admin-rooms-tab");
+
+  if (bookingsTab) bookingsTab.classList.toggle("active", activeTab === "bookings");
+  if (roomsTab) roomsTab.classList.toggle("active", activeTab === "rooms");
+}
+
+function showAdminBookings(event) {
+  if (event) event.preventDefault();
+
   document.getElementById("admin-bookings").style.display = "block";
   document.getElementById("admin-rooms").style.display = "none";
+
+  setAdminTab("bookings");
+  loadAdminBookings();
+  loadAdminStats();
 }
-function showAdminRooms() {
+
+function showAdminRooms(event) {
+  if (event) event.preventDefault();
+
   document.getElementById("admin-bookings").style.display = "none";
   document.getElementById("admin-rooms").style.display = "block";
+
+  setAdminTab("rooms");
   loadAdminRooms();
+  loadAdminStats();
 }
 
 async function loadAdminBookings() {
@@ -1367,12 +1659,16 @@ async function loadAdminBookings() {
 
 async function loadAdminStats() {
   const res = await fetch(API_länk + "/api/admin/stats", {
-    credentials: "include",
+    credentials: "include"
   });
+
   const data = await res.json();
+
   document.getElementById("total-bookings").innerText = data.bookings;
-  document.getElementById("available-rooms").innerText = data.rooms;
+  document.getElementById("available-rooms").innerText = data.availableToday;
 }
+
+
 if (window.location.pathname.includes("admin.html")) {
   loadAdminStats();
   loadAdminRooms();
