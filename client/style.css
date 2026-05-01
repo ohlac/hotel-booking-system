@@ -1242,41 +1242,45 @@ body{
 }
 
 
-.admin-rooms div{
- background:rgba(0,0,0,0.35);
- border-radius:12px;
- padding:20px;
- margin-bottom:15px;
- border:1px solid rgba(255,255,255,0.2);
-}
-add-room-form{
- display:flex;
- gap:10px;
- margin-bottom:20px;
-}
-
-.add-room-form input{
- padding:8px 12px;
- border-radius:6px;
- border:1px solid #ccc;
- outline:none;
- background:#f5f5f5;
- font-size:14px;
- transition:0.2s;
+.add-room-form {
+  display: grid;
+  grid-template-columns: 140px 160px 160px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  margin: 0 0 24px;
+  padding: 18px;
+  background: rgba(40, 25, 15, 0.86);
+  border: 1px solid rgba(212, 175, 55, 0.30);
+  border-radius: 18px;
 }
 
-.add-room-form input:focus{
- border:1px solid #c89b3c;
- background:white;
- box-shadow:0 0 5px rgba(200,155,60,0.5);
+.add-room-form input,
+.add-room-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  background: #f5f5f5;
+  font-size: 14px;
 }
 
-.add-room-form input{
- width:160px;
+.add-room-form input:focus,
+.add-room-form select:focus {
+  border-color: #c89b3c;
+  background: white;
+  box-shadow: 0 0 5px rgba(200,155,60,0.5);
 }
 
-.add-room-form input{
- flex:1;
+.admin-rooms {
+  display: grid;
+  gap: 18px;
+}
+
+@media (max-width: 900px) {
+  .add-room-form {
+    grid-template-columns: 1fr;
+  }
 }
 
 

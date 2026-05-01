@@ -1,12 +1,12 @@
 // Adress till api
-const API_länk = "https://hotel-api-67w7.onrender.com";
+const API_URL = "https://hotel-api-67w7.onrender.com";
 // HTML-element
 const roomsContainer = document.getElementById("rooms-container");
 const loginForm = document.querySelector(".login-form");
 // Kontrollera om användare är inloggad
 async function checkLoginStatus() {
   try {
-    const response = await fetch(`${API_länk}/api/check-auth`, {
+    const response = await fetch(`${API_URL}/api/check-auth`, {
       credentials: "include",
     });
     const data = await response.json();
@@ -49,7 +49,7 @@ function updateNavForLoggedInUser(role) {
 async function logoutUser(e) {
   e.preventDefault();
   try {
-    await fetch(`${API_länk}/api/logout`, {
+    await fetch(`${API_URL}/api/logout`, {
       method: "POST",
       credentials: "include",
     });
@@ -66,7 +66,7 @@ if (loginForm) {
     const username = loginForm.querySelector('input[type="text"]').value;
     const password = loginForm.querySelector('input[type="password"]').value;
     try {
-      const response = await fetch(`${API_länk}/api/login`, {
+      const response = await fetch(`${API_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -118,7 +118,7 @@ if (forgotPasswordForm) {
       forgotButton.disabled = true;
       forgotButton.textContent = "Sending...";
 
-      const response = await fetch(`${API_länk}/api/forgot-password`, {
+      const response = await fetch(`${API_URL}/api/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -184,7 +184,7 @@ if (resetPasswordForm) {
 
     try {
       const response = await fetch(
-        `${API_länk}/api/reset-password/${encodeURIComponent(token)}`,
+        `${API_URL}/api/reset-password/${encodeURIComponent(token)}`,
       );
       const result = await response.json();
 
@@ -229,7 +229,7 @@ if (resetPasswordForm) {
       resetButton.disabled = true;
       resetButton.textContent = "Updating...";
 
-      const response = await fetch(`${API_länk}/api/reset-password`, {
+      const response = await fetch(`${API_URL}/api/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, password }),
@@ -480,7 +480,7 @@ if (registerForm) {
       }
 
       const response = await fetch(
-        `${API_lnk}/api/check-user?${params.toString()}`,
+        `${API_URL}/api/check-user?${params.toString()}`,
       );
       const result = await response.json();
 
@@ -598,7 +598,7 @@ if (registerForm) {
       submitButton.disabled = true;
       submitButton.textContent = "Registering...";
 
-      const response = await fetch(`${API_lnk}/api/register`, {
+      const response = await fetch(`${API_URL}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, username, fullName, password }),
@@ -756,7 +756,7 @@ async function getRooms(start = '', end = '', type = '') {
   if (!roomsContainer) return;
 
   try {
-    let url = `${API_länk}/api/rooms`;
+    let url = `${API_URL}/api/rooms`;
     if (start && end) {
       url += `?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&type=${encodeURIComponent(type)}`;
     }
@@ -907,7 +907,7 @@ window.bookRoom = async function (roomId) {
   );
 
   try {
-    const response = await fetch(`${API_länk}/api/create-checkout-session`, {
+    const response = await fetch(`${API_URL}/api/create-checkout-session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -956,7 +956,7 @@ async function confirmStripeBooking() {
 
   try {
     const response = await fetch(
-      `${API_länk}/api/confirm-booking?session_id=${encodeURIComponent(sessionId)}`,
+      `${API_URL}/api/confirm-booking?session_id=${encodeURIComponent(sessionId)}`,
       { credentials: "include" },
     );
 
@@ -992,7 +992,7 @@ async function confirmStripeBooking() {
 window.cancelBooking = async function (bookingId) {
   if (!confirm("Are you sure you want to cancel this booking?")) return;
   try {
-    const response = await fetch(`${API_länk}/api/bookings/${bookingId}`, {
+    const response = await fetch(`${API_URL}/api/bookings/${bookingId}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -1085,6 +1085,7 @@ const translations = {
     adminTotalBookings: "Total Current Bookings",
     adminAvailableRooms: "Available Rooms",
     adminBookedFor: "Booked for",
+    adminAvailableToday: "Rooms Available Today",
     imgText: "Image",
     // LOGIN
     loginInfoText:
@@ -1157,6 +1158,7 @@ const translations = {
     adminTotalBookings: "Totala bokningar",
     adminAvailableRooms: "Lediga rum",
     adminBookedFor: "Bokad för",
+    adminAvailableToday: "Lediga rum idag",
     imgText: "Bild",
     // LOGIN
     loginInfoText: "Logga in för att hantera dina bokningar och inställningar",
@@ -1249,7 +1251,7 @@ async function loadUserProfile() {
   if (!emailInput) return;
 
   try {
-    const response = await fetch(`${API_länk}/api/user/profile`, {
+    const response = await fetch(`${API_URL}/api/user/profile`, {
       credentials: "include"
     });
 
@@ -1303,7 +1305,7 @@ if (saveBtn) {
       saveBtn.disabled = true;
       saveBtn.textContent = "Saving...";
 
-      const response = await fetch(`${API_länk}/api/update-user`, {
+      const response = await fetch(`${API_URL}/api/update-user`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"
@@ -1343,7 +1345,7 @@ async function getUserBookings() {
   const bookingsContainer = document.querySelector("#bookings-section");
   if (!bookingsContainer) return;
   try {
-    const response = await fetch(`${API_länk}/api/user/bookings`, {
+    const response = await fetch(`${API_URL}/api/user/bookings`, {
       credentials: "include",
     });
     const bookings = await response.json();
@@ -1396,7 +1398,7 @@ async function adminCancelBooking(id) {
   if (!confirm("Cancel this booking?")) return;
 
   try {
-    const response = await fetch(`${API_länk}/api/admin/bookings/${id}`, {
+    const response = await fetch(`${API_URL}/api/admin/bookings/${id}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -1432,7 +1434,7 @@ async function loadAdminRooms() {
   if (!container) return;
 
   try {
-    const response = await fetch(`${API_länk}/api/admin/rooms-with-bookings`, {
+    const response = await fetch(`${API_URL}/api/admin/rooms-with-bookings`, {
       credentials: "include"
     });
 
@@ -1500,7 +1502,7 @@ async function loadAdminRooms() {
 // Ta bort ett rum från admin-sidan
 async function deleteRoom(id) {
   if (!confirm("Delete this room?")) return;
-  await fetch(`${API_länk}/api/admin/rooms/${id}`, {
+  await fetch(`${API_URL}/api/admin/rooms/${id}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -1536,7 +1538,7 @@ async function addRoom() {
   try {
     setMessage("Adding room...", "");
 
-    const response = await fetch(`${API_länk}/api/admin/rooms`, {
+    const response = await fetch(`${API_URL}/api/admin/rooms`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -1605,7 +1607,7 @@ function showAdminRooms(event) {
 
 async function loadAdminBookings() {
   try {
-    const res = await fetch(`${API_länk}/api/admin/bookings`, {
+    const res = await fetch(`${API_URL}/api/admin/bookings`, {
       credentials: "include",
     });
 
@@ -1635,16 +1637,25 @@ async function loadAdminBookings() {
       const end = new Date(b.end_date).toLocaleDateString();
 
       container.innerHTML += `
-        <div class="admin-card">
-          <h3>Room ${b.room_number}</h3>
-          <p>User: ${b.username}</p>
-          <p>Type: ${b.type}</p>
-          <p>${start} → ${end}</p>
-          <button class="cancel-btn" onclick="adminCancelBooking(${b.id})">
-            Cancel Booking
-          </button>
-        </div>
-      `;
+  <div class="admin-card">
+    <div>
+      <h3>Room ${b.room_number}</h3>
+      <p><strong>Guest:</strong> ${b.full_name || b.username}</p>
+      <p><strong>Email:</strong> ${b.email}</p>
+    </div>
+
+    <div>
+      <p><strong>Type:</strong> ${b.type}</p>
+      <p><strong>Dates:</strong> ${start} → ${end}</p>
+      <p><strong>Nights:</strong> ${b.nights}</p>
+      <p><strong>Total:</strong> ${Number(b.total_price).toFixed(2)} kr</p>
+    </div>
+
+    <button class="cancel-btn" onclick="adminCancelBooking(${b.id})">
+      Cancel Booking
+    </button>
+  </div>
+`;
     });
 
     document.getElementById("total-bookings").innerText = bookings.length;
@@ -1658,7 +1669,7 @@ async function loadAdminBookings() {
 }
 
 async function loadAdminStats() {
-  const res = await fetch(API_länk + "/api/admin/stats", {
+  const res = await fetch(API_URL + "/api/admin/stats", {
     credentials: "include"
   });
 

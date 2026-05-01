@@ -316,112 +316,106 @@ app.get("/api/confirm-booking", async (req, res) => {
       return res.status(400).json({ message: dateValidation.message });
     }
 
-    const [existingBooking] = await pool.promise().query(
-      `SELECT id
-             FROM bookings
-             WHERE user_id = ?
-               AND room_id = ?
-               AND start_date = ?
-               AND end_date = ?
-             LIMIT 1`,
-      [req.session.user.id, roomId, startDate, endDate],
-    );
-
-    if (existingBooking.length > 0) {
-      return res.json({
-        message: "Booking already confirmed.",
-        bookingId: existingBooking[0].id,
-        roomNumber,
-        roomType,
-        startDate,
-        endDate,
-      });
-    }
-
     const connection = await pool.promise().getConnection();
+
+    let bookingId;
+    let isNewBooking = false;
 
     try {
       await connection.beginTransaction();
 
-      // Lås rummet så att två bokningar för samma rum inte kan bekräftas samtidigt
-      const [roomLockRows] = await connection.query(
-        `SELECT id
-         FROM rooms
-         WHERE id = ?
-         FOR UPDATE`,
-        [roomId],
-      );
-
-      if (roomLockRows.length === 0) {
-        await connection.rollback();
-        return res.status(404).json({ message: "Room not found." });
-      }
-
-      const [conflicts] = await connection.query(
+      const [existingBooking] = await connection.query(
         `SELECT id
          FROM bookings
-         WHERE room_id = ?
-           AND start_date < ?
-           AND end_date > ?
+         WHERE user_id = ?
+           AND room_id = ?
+           AND start_date = ?
+           AND end_date = ?
          LIMIT 1`,
-        [roomId, endDate, startDate],
-      );
-
-      if (conflicts.length > 0) {
-        await connection.rollback();
-        return res.status(409).json({
-          message:
-            "Payment succeeded, but the room was booked before your booking could be confirmed. Please contact support for help.",
-        });
-      }
-
-      const [result] = await connection.query(
-        `INSERT INTO bookings (user_id, room_id, start_date, end_date)
-         VALUES (?, ?, ?, ?)`,
         [req.session.user.id, roomId, startDate, endDate],
       );
 
-      await connection.commit();
+      if (existingBooking.length > 0) {
+        bookingId = existingBooking[0].id;
+        await connection.commit();
+      } else {
+        const [roomLockRows] = await connection.query(
+          `SELECT id
+           FROM rooms
+           WHERE id = ?
+           FOR UPDATE`,
+          [roomId],
+        );
 
-      res.json({
-        message: "Booking confirmed successfully.",
-        bookingId: result.insertId,
-        roomNumber,
-        roomType,
-        startDate,
-        endDate,
-      });
+        if (roomLockRows.length === 0) {
+          await connection.rollback();
+          return res.status(404).json({ message: "Room not found." });
+        }
+
+        const [conflicts] = await connection.query(
+          `SELECT id
+           FROM bookings
+           WHERE room_id = ?
+             AND start_date < ?
+             AND end_date > ?
+           LIMIT 1`,
+          [roomId, endDate, startDate],
+        );
+
+        if (conflicts.length > 0) {
+          await connection.rollback();
+          return res.status(409).json({
+            message:
+              "Payment succeeded, but the room was booked before your booking could be confirmed. Please contact support for help.",
+          });
+        }
+
+        const [insertResult] = await connection.query(
+          `INSERT INTO bookings (user_id, room_id, start_date, end_date)
+           VALUES (?, ?, ?, ?)`,
+          [req.session.user.id, roomId, startDate, endDate],
+        );
+
+        bookingId = insertResult.insertId;
+        isNewBooking = true;
+
+        await connection.commit();
+      }
     } catch (error) {
       await connection.rollback();
       console.error("Error confirming booking transaction:", error);
-      res.status(500).json({ message: "Could not confirm booking." });
+      return res.status(500).json({ message: "Could not confirm booking." });
     } finally {
       connection.release();
     }
 
-    const [userRows] = await pool.promise().query(
-      `SELECT email, full_name
-             FROM users
-             WHERE id = ?
-             LIMIT 1`,
-      [req.session.user.id],
-    );
+    if (isNewBooking) {
+      const [userRows] = await pool.promise().query(
+        `SELECT email, full_name
+         FROM users
+         WHERE id = ?
+         LIMIT 1`,
+        [req.session.user.id],
+      );
 
-    if (userRows.length > 0) {
-      await sendBookingConfirmedEmail({
-        to: userRows[0].email,
-        fullName: userRows[0].full_name,
-        bookingId: result.insertId,
-        roomNumber,
-        roomType,
-        startDate,
-        endDate,
-      });
+      if (userRows.length > 0) {
+        await sendBookingConfirmedEmail({
+          to: userRows[0].email,
+          fullName: userRows[0].full_name,
+          bookingId,
+          roomNumber,
+          roomType,
+          startDate,
+          endDate,
+        });
+      }
     }
 
-    res.json({
-      message: "Booking confirmed successfully.",
-      bookingId: result.insertId,
+    return res.json({
+      message: isNewBooking
+        ? "Booking confirmed successfully."
+        : "Booking already confirmed.",
+      bookingId,
       roomNumber,
       roomType,
       startDate,
@@ -429,7 +423,7 @@ app.get("/api/confirm-booking", async (req, res) => {
     });
   } catch (error) {
     console.error("Error confirming booking after payment:", error);
-    res.status(500).json({ message: "Could not confirm booking." });
+    return res.status(500).json({ message: "Could not confirm booking." });
   }
 });
 
@@ -789,108 +783,122 @@ app.post("/api/logout", (req, res) => {
   });
 });
 
-
 // Hämta inloggad användares profil
-app.get('/api/user/profile', async (req, res) => {
+app.get("/api/user/profile", async (req, res) => {
   if (!req.session.user) {
-      return res.status(401).json({ message: "Not logged in" });
+    return res.status(401).json({ message: "Not logged in" });
   }
 
   try {
-      const [rows] = await pool.promise().query(
-          `SELECT id, username, email, full_name, role, created_at
+    const [rows] = await pool.promise().query(
+      `SELECT id, username, email, full_name, role, created_at
            FROM users
            WHERE id = ?
            LIMIT 1`,
-          [req.session.user.id]
-      );
+      [req.session.user.id],
+    );
 
-      if (rows.length === 0) {
-          return res.status(404).json({ message: "User not found" });
-      }
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-      res.json(rows[0]);
+    res.json(rows[0]);
   } catch (error) {
-      console.error("Could not fetch user profile:", error);
-      res.status(500).json({ message: "Could not fetch user profile" });
+    console.error("Could not fetch user profile:", error);
+    res.status(500).json({ message: "Could not fetch user profile" });
   }
 });
 
-
 // Uppdatera anvndarinstllningar
-app.put('/api/update-user', async (req, res) => {
+app.put("/api/update-user", async (req, res) => {
   if (!req.session.user) {
-      return res.status(401).json({ message: "Not logged in" });
+    return res.status(401).json({ message: "Not logged in" });
   }
 
   const userId = req.session.user.id;
-  const email = String(req.body.email || '').trim().toLowerCase();
-  const currentPassword = String(req.body.currentPassword || '');
-  const newPassword = String(req.body.newPassword || '');
+  const email = String(req.body.email || "")
+    .trim()
+    .toLowerCase();
+  const currentPassword = String(req.body.currentPassword || "");
+  const newPassword = String(req.body.newPassword || "");
 
   try {
-      if (!email) {
-          return res.status(400).json({ message: "Email is required." });
-      }
+    if (!email) {
+      return res.status(400).json({ message: "Email is required." });
+    }
 
-      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailPattern.test(email)) {
-          return res.status(400).json({ message: "Please enter a valid email address." });
-      }
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      return res
+        .status(400)
+        .json({ message: "Please enter a valid email address." });
+    }
 
-      const [existingEmail] = await pool.promise().query(
-          `SELECT id FROM users WHERE LOWER(email) = ? AND id <> ? LIMIT 1`,
-          [email, userId]
+    const [existingEmail] = await pool
+      .promise()
+      .query(
+        `SELECT id FROM users WHERE LOWER(email) = ? AND id <> ? LIMIT 1`,
+        [email, userId],
       );
 
-      if (existingEmail.length > 0) {
-          return res.status(409).json({ message: "That email is already used by another account." });
+    if (existingEmail.length > 0) {
+      return res
+        .status(409)
+        .json({ message: "That email is already used by another account." });
+    }
+
+    const [userRows] = await pool
+      .promise()
+      .query(`SELECT password FROM users WHERE id = ? LIMIT 1`, [userId]);
+
+    if (userRows.length === 0) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({
+          message: "Current password is required when changing password.",
+        });
       }
 
-      const [userRows] = await pool.promise().query(
-          `SELECT password FROM users WHERE id = ? LIMIT 1`,
-          [userId]
+      const currentPasswordIsValid = await passwordMatches(
+        currentPassword,
+        userRows[0].password,
       );
 
-      if (userRows.length === 0) {
-          return res.status(404).json({ message: "User not found." });
+      if (!currentPasswordIsValid) {
+        return res.status(401).json({
+          message: "Current password is incorrect.",
+        });
       }
 
-      if (newPassword) {
-          if (!currentPassword) {
-              return res.status(400).json({ message: "Current password is required when changing password." });
-          }
-
-          if (currentPassword !== userRows[0].password) {
-              return res.status(401).json({ message: "Current password is incorrect." });
-          }
-
-          if (
-              newPassword.length < 8 ||
-              !/[A-Z]/.test(newPassword) ||
-              !/[a-z]/.test(newPassword) ||
-              !/\d/.test(newPassword)
-          ) {
-              return res.status(400).json({
-                  message: "New password must be at least 8 characters and include uppercase, lowercase and a number."
-              });
-          }
-
-          await pool.promise().query(
-              `UPDATE users SET email = ?, password = ? WHERE id = ?`,
-              [email, newPassword, userId]
-          );
-      } else {
-          await pool.promise().query(
-              `UPDATE users SET email = ? WHERE id = ?`,
-              [email, userId]
-          );
+      if (!isStrongPassword(newPassword)) {
+        return res.status(400).json({
+          message:
+            "New password must be at least 8 characters and include uppercase, lowercase and a number.",
+        });
       }
 
-      res.json({ message: "Settings updated successfully." });
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+      await pool
+        .promise()
+        .query(`UPDATE users SET email = ?, password = ? WHERE id = ?`, [
+          email,
+          hashedPassword,
+          userId,
+        ]);
+    } else {
+      await pool
+        .promise()
+        .query(`UPDATE users SET email = ? WHERE id = ?`, [email, userId]);
+    }
+
+    res.json({ message: "Settings updated successfully." });
   } catch (error) {
-      console.error("Could not update user:", error);
-      res.status(500).json({ message: "Server error" });
+    console.error("Could not update user:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -902,20 +910,28 @@ app.get("/api/admin/bookings", async (req, res) => {
 
   const sql = `
  SELECT 
- b.id,
- u.username,
- r.room_number,
- r.type,
- b.start_date,
- b.end_date
+   b.id,
+   u.username,
+   u.full_name,
+   u.email,
+   r.room_number,
+   r.type,
+   r.price_per_night,
+   b.start_date,
+   b.end_date,
+   DATEDIFF(b.end_date, b.start_date) AS nights,
+   DATEDIFF(b.end_date, b.start_date) * r.price_per_night AS total_price
  FROM bookings b
  JOIN users u ON b.user_id = u.id
  JOIN rooms r ON b.room_id = r.id
+ WHERE b.end_date >= CURDATE()
  ORDER BY b.start_date ASC
 `;
   const [rows] = await pool.promise().query(sql);
   res.json(rows);
 });
+
+
 // API för att ta bort ett rum (endast admin)
 app.delete("/api/admin/rooms/:id", async (req, res) => {
   if (!req.session.user || req.session.user.role !== "admin") {
@@ -923,23 +939,47 @@ app.delete("/api/admin/rooms/:id", async (req, res) => {
   }
 
   const id = req.params.id;
-  await pool.promise().query("DELETE FROM rooms WHERE id=?", [id]);
-  res.json({ message: "Room deleted" });
+
+  try {
+    const [activeBookings] = await pool.promise().query(
+      `SELECT COUNT(*) AS total
+       FROM bookings
+       WHERE room_id = ?
+         AND end_date >= CURDATE()`,
+      [id]
+    );
+
+    if (activeBookings[0].total > 0) {
+      return res.status(409).json({
+        message: "This room has active or future bookings and cannot be deleted.",
+      });
+    }
+
+    await pool.promise().query("DELETE FROM rooms WHERE id = ?", [id]);
+
+    res.json({ message: "Room deleted" });
+  } catch (error) {
+    console.error("Could not delete room:", error);
+    res.status(500).json({ message: "Could not delete room." });
+  }
 });
 
-app.get('/api/admin/stats', async (req, res) => {
-  if (!req.session.user || req.session.user.role !== 'admin') {
-      return res.status(403).json({ message: "Admin only" });
+
+app.get("/api/admin/stats", async (req, res) => {
+  if (!req.session.user || req.session.user.role !== "admin") {
+    return res.status(403).json({ message: "Admin only" });
   }
 
   try {
-      const [rooms] = await pool.promise().query("SELECT COUNT(*) as total FROM rooms");
-      const [bookings] = await pool.promise().query("SELECT COUNT(*) as total FROM bookings");
+    const [rooms] = await pool.promise().query("SELECT COUNT(*) as total FROM rooms");
+    const [bookings] = await pool.promise().query(
+      "SELECT COUNT(*) as total FROM bookings WHERE end_date >= CURDATE()"
+    );
 
-      const today = new Date().toISOString().slice(0, 10);
+    const today = new Date().toISOString().slice(0, 10);
 
-      const [availableToday] = await pool.promise().query(
-          `SELECT COUNT(*) AS total
+    const [availableToday] = await pool.promise().query(
+      `SELECT COUNT(*) AS total
            FROM rooms r
            WHERE NOT EXISTS (
               SELECT 1
@@ -948,19 +988,20 @@ app.get('/api/admin/stats', async (req, res) => {
                 AND b.start_date <= ?
                 AND b.end_date > ?
            )`,
-          [today, today]
-      );
+      [today, today],
+    );
 
-      res.json({
-          rooms: rooms[0].total,
-          bookings: bookings[0].total,
-          availableToday: availableToday[0].total
-      });
+    res.json({
+      rooms: rooms[0].total,
+      bookings: bookings[0].total,
+      availableToday: availableToday[0].total,
+    });
   } catch (error) {
-      console.error("Could not load admin stats:", error);
-      res.status(500).json({ message: "Could not load admin stats." });
+    console.error("Could not load admin stats:", error);
+    res.status(500).json({ message: "Could not load admin stats." });
   }
 });
+
 
 // API för att lägga till ett rum (ADMIN)
 app.post("/api/admin/rooms", async (req, res) => {
@@ -968,17 +1009,44 @@ app.post("/api/admin/rooms", async (req, res) => {
     return res.status(403).json({ message: "Admin only" });
   }
 
-  const { room_number, type, price_per_night, description } = req.body;
+  const roomNumber = String(req.body.room_number || "").trim();
+  const type = String(req.body.type || "").trim();
+  const price = Number(req.body.price_per_night);
+  const description = String(req.body.description || "").trim();
 
-  await pool
-    .promise()
-    .query(
-      "INSERT INTO rooms (room_number,type,price_per_night,description) VALUES (?,?,?,?)",
-      [room_number, type, price_per_night, description],
+  const allowedTypes = ["Single", "Double", "Suite"];
+
+  if (!roomNumber || !type || !price || !description) {
+    return res.status(400).json({ message: "All room fields are required." });
+  }
+
+  if (!allowedTypes.includes(type)) {
+    return res.status(400).json({ message: "Invalid room type." });
+  }
+
+  if (price <= 0) {
+    return res.status(400).json({ message: "Price must be greater than 0." });
+  }
+
+  try {
+    await pool.promise().query(
+      `INSERT INTO rooms (room_number, type, price_per_night, description)
+       VALUES (?, ?, ?, ?)`,
+      [roomNumber, type, price, description]
     );
 
-  res.json({ message: "Room added" });
+    res.json({ message: "Room added" });
+  } catch (error) {
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({ message: "Room number already exists." });
+    }
+
+    console.error("Could not add room:", error);
+    res.status(500).json({ message: "Could not add room." });
+  }
 });
+
+
 
 // LÖSENORDSÅTERSTÄLLNING
 
@@ -1161,21 +1229,20 @@ app.post("/api/reset-password", async (req, res) => {
   }
 });
 
-
-app.get('/api/admin/rooms-with-bookings', async (req, res) => {
-  if (!req.session.user || req.session.user.role !== 'admin') {
-      return res.status(403).json({ message: "Admin only" });
+app.get("/api/admin/rooms-with-bookings", async (req, res) => {
+  if (!req.session.user || req.session.user.role !== "admin") {
+    return res.status(403).json({ message: "Admin only" });
   }
 
   try {
-      const [rooms] = await pool.promise().query(
-          `SELECT id, room_number, type, price_per_night, description
+    const [rooms] = await pool.promise().query(
+      `SELECT id, room_number, type, price_per_night, description
            FROM rooms
-           ORDER BY room_number ASC`
-      );
+           ORDER BY room_number ASC`,
+    );
 
-      const [bookings] = await pool.promise().query(
-          `SELECT 
+    const [bookings] = await pool.promise().query(
+      `SELECT 
               b.id AS booking_id,
               b.room_id,
               b.start_date,
@@ -1185,21 +1252,20 @@ app.get('/api/admin/rooms-with-bookings', async (req, res) => {
               u.full_name
            FROM bookings b
            JOIN users u ON b.user_id = u.id
-           ORDER BY b.start_date ASC`
-      );
+           ORDER BY b.start_date ASC`,
+    );
 
-      const roomsWithBookings = rooms.map(room => ({
-          ...room,
-          bookings: bookings.filter(booking => booking.room_id === room.id)
-      }));
+    const roomsWithBookings = rooms.map((room) => ({
+      ...room,
+      bookings: bookings.filter((booking) => booking.room_id === room.id),
+    }));
 
-      res.json(roomsWithBookings);
+    res.json(roomsWithBookings);
   } catch (error) {
-      console.error("Could not load rooms with bookings:", error);
-      res.status(500).json({ message: "Could not load rooms with bookings." });
+    console.error("Could not load rooms with bookings:", error);
+    res.status(500).json({ message: "Could not load rooms with bookings." });
   }
 });
-
 
 // Starta servern
 const PORT = process.env.PORT || 3000;
