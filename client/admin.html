@@ -71,29 +71,31 @@
       </section>
       <section class="admin-layout">
         <aside class="admin-side">
-          <a id="admin-bookings-tab" class="admin-side-btn active"
-          href="#"
-          onclick="showAdminBookings(event)"
-          data-i18n="adminCurrentBookings">
-          Current Bookings
+          <a id="admin-bookings-tab"
+             class="admin-side-btn active"
+             href="#"
+             onclick="showAdminBookings(event)"
+             data-i18n="adminCurrentBookings">
+            Current Bookings
           </a>
-         
-          <a id="admin-rooms-tab" class="admin-side-btn"
-          href="#"
-          onclick="showAdminRooms(event)"
-          data-i18n="adminManageRooms">
-          Manage Rooms
+      
+          <a id="admin-rooms-tab"
+             class="admin-side-btn"
+             href="#"
+             onclick="showAdminRooms(event)"
+             data-i18n="adminManageRooms">
+            Manage Rooms
           </a>
         </aside>
+      
         <section class="admin-content">
-
+      
           <div id="admin-bookings">
-             <div class="admin-section-title" data-i18n="adminCurrentBookingsTitle">
+            <div class="admin-section-title" data-i18n="adminCurrentBookingsTitle">
               Current Bookings
-             </div>
-
-             <div class="admin-stats">
-
+            </div>
+      
+            <div class="admin-stats">
               <div class="admin-stat-box">
                 <div class="admin-stat-title" data-i18n="adminTotalBookings">
                   Total Current Bookings
@@ -102,7 +104,7 @@
                   0
                 </div>
               </div>
-            
+      
               <div class="admin-stat-box">
                 <div class="admin-stat-title" data-i18n="adminAvailableToday">
                   Rooms Available Today
@@ -111,40 +113,44 @@
                   0
                 </div>
               </div>
-            
             </div>
+      
+            <div class="admin-cards"></div>
           </div>
-         
-          <div class="admin-cards"></div>
-        </div>
-
-          <div id="admin-rooms" style="display:none">
+      
+          <div id="admin-rooms" style="display:none;">
             <div class="admin-section-title">
               Manage Rooms
             </div>
-
-
+      
             <div class="add-room-form">
               <input type="text" id="room-number" placeholder="Room number">
+      
               <select id="room-type">
                 <option value="">Room type</option>
                 <option value="Single">Single</option>
                 <option value="Double">Double</option>
                 <option value="Suite">Suite</option>
               </select>
+      
               <input type="number" id="room-price" placeholder="Price per night">
               <input id="room-description" placeholder="Room description">
-
+      
               <button class="add-room-btn" onclick="addRoom()">
                 Add Room
               </button>
+      
               <p id="add-room-message" class="admin-message"></p>
             </div>
-
+      
             <div class="admin-rooms"></div>
           </div>
+      
         </section>
       </section>
+
+
+
       <footer class="footer-bar">
         <div class="footer-col">
           <div class="footer-title">Contact Information</div>

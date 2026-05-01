@@ -1034,24 +1034,24 @@ body{
 
 /* Admin Page */
 
-.admin-layout{
-  display:grid;
-  flex:1;
-  grid-template-columns: 170px 1fr;
+.admin-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
   gap: 24px;
   padding: 40px 60px;
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+  align-items: start;
 }
 
 
-.admin-side{
-  width:190px;
-  padding-top:20px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
+.admin-side {
+  width: 100%;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 
@@ -1084,10 +1084,11 @@ body{
 }
 
 
-.admin-content{
-  flex:1;
-  display:flex;
-  flex-direction:column;
+.admin-content {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 
@@ -1272,10 +1273,24 @@ body{
   box-shadow: 0 0 5px rgba(200,155,60,0.5);
 }
 
+#admin-rooms {
+  width: 100%;
+}
+
 .admin-rooms {
+  width: 100%;
   display: grid;
   gap: 18px;
 }
+
+
+
+.add-room-form .admin-message {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+
 
 @media (max-width: 900px) {
   .add-room-form {
@@ -1935,6 +1950,8 @@ flex-wrap:wrap;
 }
 
 .admin-room-card {
+  width: 100%;
+  box-sizing: border-box;
   background: rgba(40, 25, 15, 0.86);
   border: 1px solid rgba(212, 175, 55, 0.30);
   border-radius: 18px;
