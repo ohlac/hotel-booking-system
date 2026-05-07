@@ -735,24 +735,26 @@ function getRoomImages(room) {
   const roomId = Number(room.id);
 
   const imageSets = {
-    Single: ['1.jpg', '2.jpg', '3.jpg'],
-    Double: ['4.jpg', '5.jpg', '6.jpg'],
-    Suite: ['7.jpg', '8.jpg', '9.jpg']
+    Single: ["1.jpg", "2.jpg", "3.jpg"],
+    Double: ["4.jpg", "5.jpg", "6.jpg"],
+    Suite: ["7.jpg", "8.jpg", "9.jpg"],
   };
 
-  const fallback = imageSets[room.type] || ['1.jpg', '2.jpg', '3.jpg'];
+  const fallback = imageSets[room.type] || ["1.jpg", "2.jpg", "3.jpg"];
 
   // Gör att olika rum av samma typ får lite olika första bild
   const offset = roomId % fallback.length;
-  return [...fallback.slice(offset), ...fallback.slice(0, offset)].map(file => `images/${file}`);
+  return [...fallback.slice(offset), ...fallback.slice(0, offset)].map(
+    (file) => `images/${file}`,
+  );
 }
 
 function getRoomPreviewImage(room) {
   return getRoomImages(room)[0];
 }
 
-async function getRooms(start = '', end = '', type = '') {
-  const roomsContainer = document.getElementById('rooms-container');
+async function getRooms(start = "", end = "", type = "") {
+  const roomsContainer = document.getElementById("rooms-container");
   if (!roomsContainer) return;
 
   try {
@@ -764,23 +766,23 @@ async function getRooms(start = '', end = '', type = '') {
     const response = await fetch(url);
     const rooms = await response.json();
 
-    roomsContainer.innerHTML = '';
+    roomsContainer.innerHTML = "";
 
     if (!Array.isArray(rooms) || rooms.length === 0) {
       roomsContainer.innerHTML = `<p style="text-align:center; width:100%;">No available rooms found for these dates.</p>`;
       return;
     }
 
-    rooms.forEach(room => {
+    rooms.forEach((room) => {
       const previewImage = getRoomPreviewImage(room);
 
-      const roomCard = document.createElement('article');
-      roomCard.classList.add('room-card', 'clickable-room-card');
+      const roomCard = document.createElement("article");
+      roomCard.classList.add("room-card", "clickable-room-card");
 
       roomCard.innerHTML = `
         <div class="room-text">
           <h3 class="room-title">Room ${room.room_number} - ${room.type}</h3>
-          <p class="room-desc">${room.description || 'No description available.'}</p>
+          <p class="room-desc">${room.description || "No description available."}</p>
           <p class="room-desc" style="font-weight: bold; color: #d4af37;">
             Price: ${room.price_per_night} kr/night
           </p>
@@ -794,14 +796,14 @@ async function getRooms(start = '', end = '', type = '') {
         </div>
       `;
 
-      roomCard.addEventListener('click', () => {
+      roomCard.addEventListener("click", () => {
         openRoomDetails(room);
       });
 
       roomsContainer.appendChild(roomCard);
     });
   } catch (error) {
-    console.error('Fel vid hämtning av rum:', error);
+    console.error("Fel vid hämtning av rum:", error);
     roomsContainer.innerHTML = `<p style="text-align:center; color:red;">Kunde inte hämta rum.</p>`;
   }
 }
@@ -811,43 +813,52 @@ function openRoomDetails(room) {
   currentRoomImages = getRoomImages(room);
   currentRoomImageIndex = 0;
 
-  const modal = document.getElementById('room-details-modal');
-  const image = document.getElementById('room-modal-image');
-  const title = document.getElementById('room-modal-title');
-  const description = document.getElementById('room-modal-description');
-  const price = document.getElementById('room-modal-price');
-  const status = document.getElementById('room-modal-status');
-  const bookBtn = document.getElementById('room-modal-book-btn');
+  const modal = document.getElementById("room-details-modal");
+  const image = document.getElementById("room-modal-image");
+  const title = document.getElementById("room-modal-title");
+  const description = document.getElementById("room-modal-description");
+  const price = document.getElementById("room-modal-price");
+  const status = document.getElementById("room-modal-status");
+  const bookBtn = document.getElementById("room-modal-book-btn");
 
-  if (!modal || !image || !title || !description || !price || !status || !bookBtn) return;
+  if (
+    !modal ||
+    !image ||
+    !title ||
+    !description ||
+    !price ||
+    !status ||
+    !bookBtn
+  )
+    return;
 
   image.src = currentRoomImages[currentRoomImageIndex];
   image.alt = `${room.type} room ${room.room_number}`;
 
   title.textContent = `Room ${room.room_number} - ${room.type}`;
-  description.textContent = room.description || 'No description available.';
+  description.textContent = room.description || "No description available.";
   price.textContent = `${room.price_per_night} kr per night`;
-  status.textContent = room.status ? `Status: ${room.status}` : '';
+  status.textContent = room.status ? `Status: ${room.status}` : "";
 
   bookBtn.onclick = () => {
     closeRoomDetails();
     bookRoom(room.id);
   };
 
-  modal.classList.add('open');
-  modal.setAttribute('aria-hidden', 'false');
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
 }
 
 window.closeRoomDetails = function () {
-  const modal = document.getElementById('room-details-modal');
+  const modal = document.getElementById("room-details-modal");
   if (!modal) return;
 
-  modal.classList.remove('open');
-  modal.setAttribute('aria-hidden', 'true');
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
 };
 
 window.changeRoomImage = function (direction) {
-  const image = document.getElementById('room-modal-image');
+  const image = document.getElementById("room-modal-image");
   if (!image || currentRoomImages.length === 0) return;
 
   currentRoomImageIndex += direction;
@@ -863,8 +874,8 @@ window.changeRoomImage = function (direction) {
   image.src = currentRoomImages[currentRoomImageIndex];
 };
 
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') {
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
     closeRoomDetails();
   }
 });
@@ -975,10 +986,23 @@ async function confirmStripeBooking() {
     const formattedStart = new Date(data.startDate).toLocaleDateString();
     const formattedEnd = new Date(data.endDate).toLocaleDateString();
 
-    title.textContent = "Payment successful ✓";
-    message.textContent = "Your booking has been confirmed and saved.";
-    dates.innerHTML = `Room <strong>${data.roomNumber}</strong> (${data.roomType}) from <strong>${formattedStart}</strong> to <strong>${formattedEnd}</strong>.`;
-    bookingIdText.innerHTML = `Booking ID: <strong>#${data.bookingId}</strong>`;
+    title.textContent = "Booking confirmed ✓";
+    title.classList.add("confirm-title-success");
+
+    message.textContent =
+      "Your payment was successful and your booking has been saved.";
+
+    dates.innerHTML = `
+  <strong>Room ${data.roomNumber}</strong> (${data.roomType})<br>
+  Check-in: <strong>${formattedStart}</strong><br>
+  Check-out: <strong>${formattedEnd}</strong>
+`;
+
+    bookingIdText.innerHTML = `
+  Booking ID: <strong>#${data.bookingId}</strong>
+`;
+
+    window.history.replaceState({}, document.title, "booking.html");
   } catch (error) {
     console.error("Error confirming Stripe booking:", error);
     title.textContent = "Could not confirm booking";
@@ -1187,7 +1211,6 @@ const translations = {
   },
 };
 
-
 function setLanguage(lang) {
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
@@ -1215,14 +1238,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-
 // Visa användarinställningar
 function setUserTab(activeTab) {
   const bookingsTab = document.getElementById("user-bookings-tab");
   const settingsTab = document.getElementById("user-settings-tab");
 
-  if (bookingsTab) bookingsTab.classList.toggle("active", activeTab === "bookings");
-  if (settingsTab) settingsTab.classList.toggle("active", activeTab === "settings");
+  if (bookingsTab)
+    bookingsTab.classList.toggle("active", activeTab === "bookings");
+  if (settingsTab)
+    settingsTab.classList.toggle("active", activeTab === "settings");
 }
 
 function showSettings(event) {
@@ -1244,15 +1268,14 @@ function showBookings(event) {
   setUserTab("bookings");
 }
 
-
-// Save user settingss
+// spara användarinställningar
 async function loadUserProfile() {
   const emailInput = document.getElementById("user-email");
   if (!emailInput) return;
 
   try {
     const response = await fetch(`${API_URL}/api/user/profile`, {
-      credentials: "include"
+      credentials: "include",
     });
 
     if (!response.ok) return;
@@ -1277,10 +1300,15 @@ const saveBtn = document.getElementById("save-user-settings");
 
 if (saveBtn) {
   saveBtn.addEventListener("click", async () => {
-    const email = document.getElementById("user-email").value.trim().toLowerCase();
+    const email = document
+      .getElementById("user-email")
+      .value.trim()
+      .toLowerCase();
     const currentPassword = document.getElementById("current-password").value;
     const newPassword = document.getElementById("new-password").value;
-    const confirmNewPassword = document.getElementById("confirm-new-password").value;
+    const confirmNewPassword = document.getElementById(
+      "confirm-new-password",
+    ).value;
 
     setSettingsMessage("", "");
 
@@ -1295,8 +1323,16 @@ if (saveBtn) {
         return;
       }
 
-      if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/\d/.test(newPassword)) {
-        setSettingsMessage("New password must be at least 8 characters and include uppercase, lowercase and a number.", "error");
+      if (
+        newPassword.length < 8 ||
+        !/[A-Z]/.test(newPassword) ||
+        !/[a-z]/.test(newPassword) ||
+        !/\d/.test(newPassword)
+      ) {
+        setSettingsMessage(
+          "New password must be at least 8 characters and include uppercase, lowercase and a number.",
+          "error",
+        );
         return;
       }
     }
@@ -1308,20 +1344,23 @@ if (saveBtn) {
       const response = await fetch(`${API_URL}/api/update-user`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         credentials: "include",
         body: JSON.stringify({
           email,
           currentPassword,
-          newPassword
-        })
+          newPassword,
+        }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        setSettingsMessage(result.message || "Could not update settings.", "error");
+        setSettingsMessage(
+          result.message || "Could not update settings.",
+          "error",
+        );
         return;
       }
 
@@ -1329,7 +1368,10 @@ if (saveBtn) {
       document.getElementById("new-password").value = "";
       document.getElementById("confirm-new-password").value = "";
 
-      setSettingsMessage(result.message || "Settings updated successfully.", "success");
+      setSettingsMessage(
+        result.message || "Settings updated successfully.",
+        "success",
+      );
     } catch (error) {
       console.error(error);
       setSettingsMessage("Something went wrong. Please try again.", "error");
@@ -1339,7 +1381,6 @@ if (saveBtn) {
     }
   });
 }
-
 
 async function getUserBookings() {
   const bookingsContainer = document.querySelector("#bookings-section");
@@ -1435,7 +1476,7 @@ async function loadAdminRooms() {
 
   try {
     const response = await fetch(`${API_URL}/api/admin/rooms-with-bookings`, {
-      credentials: "include"
+      credentials: "include",
     });
 
     const rooms = await response.json();
@@ -1447,17 +1488,19 @@ async function loadAdminRooms() {
 
     container.innerHTML = "";
 
-    rooms.forEach(room => {
+    rooms.forEach((room) => {
       const card = document.createElement("div");
       card.classList.add("admin-room-card");
 
-      const bookingsHtml = room.bookings.length === 0
-        ? `<p class="admin-empty-bookings">No bookings for this room.</p>`
-        : room.bookings.map(booking => {
-            const start = new Date(booking.start_date).toLocaleDateString();
-            const end = new Date(booking.end_date).toLocaleDateString();
+      const bookingsHtml =
+        room.bookings.length === 0
+          ? `<p class="admin-empty-bookings">No bookings for this room.</p>`
+          : room.bookings
+              .map((booking) => {
+                const start = new Date(booking.start_date).toLocaleDateString();
+                const end = new Date(booking.end_date).toLocaleDateString();
 
-            return `
+                return `
               <div class="admin-room-booking">
                 <div>
                   <strong>${start} → ${end}</strong><br>
@@ -1469,7 +1512,8 @@ async function loadAdminRooms() {
                 </button>
               </div>
             `;
-          }).join("");
+              })
+              .join("");
 
       card.innerHTML = `
         <div class="admin-room-header">
@@ -1498,7 +1542,6 @@ async function loadAdminRooms() {
   }
 }
 
-
 // Ta bort ett rum från admin-sidan
 async function deleteRoom(id) {
   if (!confirm("Delete this room?")) return;
@@ -1508,7 +1551,6 @@ async function deleteRoom(id) {
   });
   loadAdminRooms();
 }
-
 
 // Lägg till ett nytt rum (admin)
 async function addRoom() {
@@ -1541,15 +1583,15 @@ async function addRoom() {
     const response = await fetch(`${API_URL}/api/admin/rooms`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       credentials: "include",
       body: JSON.stringify({
         room_number: number,
         type,
         price_per_night: price,
-        description
-      })
+        description,
+      }),
     });
 
     const result = await response.json();
@@ -1574,12 +1616,12 @@ async function addRoom() {
   }
 }
 
-
 function setAdminTab(activeTab) {
   const bookingsTab = document.getElementById("admin-bookings-tab");
   const roomsTab = document.getElementById("admin-rooms-tab");
 
-  if (bookingsTab) bookingsTab.classList.toggle("active", activeTab === "bookings");
+  if (bookingsTab)
+    bookingsTab.classList.toggle("active", activeTab === "bookings");
   if (roomsTab) roomsTab.classList.toggle("active", activeTab === "rooms");
 }
 
@@ -1670,7 +1712,7 @@ async function loadAdminBookings() {
 
 async function loadAdminStats() {
   const res = await fetch(API_URL + "/api/admin/stats", {
-    credentials: "include"
+    credentials: "include",
   });
 
   const data = await res.json();
@@ -1678,7 +1720,6 @@ async function loadAdminStats() {
   document.getElementById("total-bookings").innerText = data.bookings;
   document.getElementById("available-rooms").innerText = data.availableToday;
 }
-
 
 if (window.location.pathname.includes("admin.html")) {
   loadAdminStats();

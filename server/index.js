@@ -85,7 +85,7 @@ function isStrongPassword(password) {
 async function passwordMatches(inputPassword, storedPassword) {
   if (!storedPassword) return false;
 
-  // Std fr nya hashade lsenord
+  // Stöd för nya hashade lösenord
   if (
     storedPassword.startsWith("$2a$") ||
     storedPassword.startsWith("$2b$") ||
@@ -94,7 +94,7 @@ async function passwordMatches(inputPassword, storedPassword) {
     return bcrypt.compare(inputPassword, storedPassword);
   }
 
-  // Std fr dina gamla lsenord i klartext s att befintliga konton inte gr snder direkt
+  // Stöd för gamla lösenord i klartext så att befintliga konton inte går sönder direkt
   return inputPassword === storedPassword;
 }
 
@@ -389,29 +389,7 @@ app.get("/api/confirm-booking", async (req, res) => {
       connection.release();
     }
 
-    if (isNewBooking) {
-      const [userRows] = await pool.promise().query(
-        `SELECT email, full_name
-         FROM users
-         WHERE id = ?
-         LIMIT 1`,
-        [req.session.user.id],
-      );
-
-      if (userRows.length > 0) {
-        await sendBookingConfirmedEmail({
-          to: userRows[0].email,
-          fullName: userRows[0].full_name,
-          bookingId,
-          roomNumber,
-          roomType,
-          startDate,
-          endDate,
-        });
-      }
-    }
-
-    return res.json({
+    const responsePayload = {
       message: isNewBooking
         ? "Booking confirmed successfully."
         : "Booking already confirmed.",
@@ -420,7 +398,42 @@ app.get("/api/confirm-booking", async (req, res) => {
       roomType,
       startDate,
       endDate,
-    });
+    };
+    
+    res.json(responsePayload);
+    
+    if (isNewBooking) {
+      void (async () => {
+        try {
+          const [userRows] = await pool.promise().query(
+            `SELECT email, full_name
+             FROM users
+             WHERE id = ?
+             LIMIT 1`,
+            [req.session.user.id],
+          );
+    
+          if (userRows.length > 0) {
+            await sendBookingConfirmedEmail({
+              to: userRows[0].email,
+              fullName: userRows[0].full_name,
+              bookingId,
+              roomNumber,
+              roomType,
+              startDate,
+              endDate,
+            });
+          }
+        } catch (emailError) {
+          console.error(
+            "Booking was confirmed, but confirmation email could not be sent:",
+            emailError,
+          );
+        }
+      })();
+    }
+    
+    return;
   } catch (error) {
     console.error("Error confirming booking after payment:", error);
     return res.status(500).json({ message: "Could not confirm booking." });
@@ -1057,7 +1070,6 @@ app.post("/api/forgot-password", async (req, res) => {
     .toLowerCase();
 
   try {
-    // Svara alltid neutralt så att man inte kan lista ut vilka e-postadresser som har konto
     const genericResponse = {
       message:
         "If an account exists with that email, a password reset link has been sent.",
@@ -1112,7 +1124,6 @@ app.post("/api/forgot-password", async (req, res) => {
   } catch (error) {
     console.error("Could not process forgot password request:", error);
 
-    // Även vid serverfel ges inte detaljer till användaren
     res.json({
       message:
         "If an account exists with that email, a password reset link has been sent.",

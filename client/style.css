@@ -1020,6 +1020,10 @@ body{
   letter-spacing:1px;
 }
 
+.confirm-title-success{
+  color:#2ecc71;
+}
+
 
 .booking-center{
   flex:1;
@@ -1882,7 +1886,7 @@ flex-wrap:wrap;
 
 
 
-/* Improved user settings */
+/* user settings */
 .settings-panel {
   display: block;
   color: #f5e6d3;
@@ -1929,7 +1933,7 @@ flex-wrap:wrap;
 
 
 
-/* Improved admin room management */
+/* admin room management */
 .admin-message {
   width: 100%;
   margin-top: 12px;
