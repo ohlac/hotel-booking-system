@@ -537,18 +537,18 @@ app.delete("/api/admin/bookings/:id", async (req, res) => {
 
     const [bookingRows] = await pool.promise().query(
       `SELECT 
-                b.id AS booking_id,
-                b.start_date,
-                b.end_date,
-                r.room_number,
-                r.type,
-                u.email,
-                u.full_name
-             FROM bookings b
-             JOIN rooms r ON b.room_id = r.id
-             JOIN users u ON b.user_id = u.id
-             WHERE b.id = ?
-             LIMIT 1`,
+        b.id AS booking_id,
+        b.start_date,
+        b.end_date,
+        r.room_number,
+        r.type,
+        u.email,
+        u.full_name
+       FROM bookings b
+       JOIN rooms r ON b.room_id = r.id
+       JOIN users u ON b.user_id = u.id
+       WHERE b.id = ?
+       LIMIT 1`,
       [bookingId],
     );
 
@@ -566,17 +566,31 @@ app.delete("/api/admin/bookings/:id", async (req, res) => {
       return res.status(404).json({ message: "Booking not found" });
     }
 
-    await sendBookingCancelledEmail({
-      to: booking.email,
-      fullName: booking.full_name,
+    res.json({
+      message: "Booking cancelled. A cancellation email is being sent to the guest.",
       bookingId: booking.booking_id,
-      roomNumber: booking.room_number,
-      roomType: booking.type,
-      startDate: booking.start_date,
-      endDate: booking.end_date,
     });
 
-    res.json({ message: "Booking cancelled by admin" });
+    void (async () => {
+      try {
+        await sendBookingCancelledEmail({
+          to: booking.email,
+          fullName: booking.full_name,
+          bookingId: booking.booking_id,
+          roomNumber: booking.room_number,
+          roomType: booking.type,
+          startDate: booking.start_date,
+          endDate: booking.end_date,
+        });
+      } catch (emailError) {
+        console.error(
+          "Booking was cancelled by admin, but the cancellation email could not be sent:",
+          emailError,
+        );
+      }
+    })();
+
+    return;
   } catch (error) {
     console.error("Could not cancel booking by admin:", error);
     res.status(500).json({ message: "Could not cancel booking" });

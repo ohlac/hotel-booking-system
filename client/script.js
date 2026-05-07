@@ -1438,6 +1438,15 @@ if (window.location.pathname.includes("admin.html")) {
 async function adminCancelBooking(id) {
   if (!confirm("Cancel this booking?")) return;
 
+  const cancelButton = document.querySelector(
+    `[data-cancel-booking-id="${id}"]`,
+  );
+
+  if (cancelButton) {
+    cancelButton.disabled = true;
+    cancelButton.textContent = "Cancelling...";
+  }
+
   try {
     const response = await fetch(`${API_URL}/api/admin/bookings/${id}`, {
       method: "DELETE",
@@ -1455,18 +1464,100 @@ async function adminCancelBooking(id) {
     }
 
     if (!response.ok) {
+      if (cancelButton) {
+        cancelButton.disabled = false;
+        cancelButton.textContent = "Cancel this booking";
+      }
+
       alert(data.message || "Could not cancel booking.");
       return;
     }
 
-    alert("Booking cancelled.");
-    loadAdminBookings();
-    loadAdminRooms();
+    removeAdminBookingFromPage(id);
+
+    showAdminCancelPopup(
+      data.message ||
+        "Booking cancelled. A cancellation email is being sent to the guest.",
+    );
+
     loadAdminStats();
+
+    const bookingsSection = document.getElementById("admin-bookings");
+    const roomsSection = document.getElementById("admin-rooms");
+
+    if (bookingsSection && bookingsSection.style.display !== "none") {
+      loadAdminBookings();
+    }
+
+    if (roomsSection && roomsSection.style.display !== "none") {
+      loadAdminRooms();
+    }
   } catch (error) {
     console.error("Admin cancel booking error:", error);
+
+    if (cancelButton) {
+      cancelButton.disabled = false;
+      cancelButton.textContent = "Cancel this booking";
+    }
+
     alert("Something went wrong while cancelling the booking.");
   }
+}
+
+function removeAdminBookingFromPage(id) {
+  const bookingElements = document.querySelectorAll(
+    `[data-booking-id="${id}"]`,
+  );
+
+  bookingElements.forEach((element) => element.remove());
+
+  document.querySelectorAll(".admin-room-bookings").forEach((section) => {
+    const hasBookings = section.querySelector(".admin-room-booking");
+    const hasEmptyMessage = section.querySelector(".admin-empty-bookings");
+
+    if (!hasBookings && !hasEmptyMessage) {
+      section.insertAdjacentHTML(
+        "beforeend",
+        `<p class="admin-empty-bookings">No bookings for this room.</p>`,
+      );
+    }
+  });
+
+  const adminBookingsContainer = document.querySelector(
+    "#admin-bookings .admin-cards",
+  );
+
+  if (
+    adminBookingsContainer &&
+    !adminBookingsContainer.querySelector(".admin-card")
+  ) {
+    adminBookingsContainer.innerHTML = `<p>No current bookings found.</p>`;
+  }
+}
+
+function showAdminCancelPopup(message) {
+  const popup = document.getElementById("admin-cancel-popup");
+  const messageElement = document.getElementById("admin-cancel-popup-message");
+  const closeButton = document.getElementById("admin-cancel-popup-close");
+
+  if (!popup || !messageElement || !closeButton) {
+    alert(message);
+    return;
+  }
+
+  messageElement.textContent = message;
+  popup.classList.add("open");
+  popup.setAttribute("aria-hidden", "false");
+  closeButton.focus();
+}
+
+function closeAdminCancelPopup() {
+  const popup = document.getElementById("admin-cancel-popup");
+
+  if (!popup) return;
+
+  popup.classList.remove("open");
+  popup.setAttribute("aria-hidden", "true");
 }
 
 // Ladda alla rum i admin-sidan
@@ -1501,13 +1592,13 @@ async function loadAdminRooms() {
                 const end = new Date(booking.end_date).toLocaleDateString();
 
                 return `
-              <div class="admin-room-booking">
+              <div class="admin-room-booking" data-booking-id="${booking.booking_id}">
                 <div>
                   <strong>${start} → ${end}</strong><br>
                   Guest: ${booking.full_name || booking.username}<br>
                   Email: ${booking.email}
                 </div>
-                <button class="cancel-btn" onclick="adminCancelBooking(${booking.booking_id})">
+                <button class="cancel-btn" data-cancel-booking-id="${booking.booking_id}" onclick="adminCancelBooking(${booking.booking_id})">
                   Cancel this booking
                 </button>
               </div>
@@ -1679,7 +1770,7 @@ async function loadAdminBookings() {
       const end = new Date(b.end_date).toLocaleDateString();
 
       container.innerHTML += `
-  <div class="admin-card">
+    <div class="admin-card" data-booking-id="${b.id}">
     <div>
       <h3>Room ${b.room_number}</h3>
       <p><strong>Guest:</strong> ${b.full_name || b.username}</p>
@@ -1693,7 +1784,7 @@ async function loadAdminBookings() {
       <p><strong>Total:</strong> ${Number(b.total_price).toFixed(2)} kr</p>
     </div>
 
-    <button class="cancel-btn" onclick="adminCancelBooking(${b.id})">
+    <button class="cancel-btn" data-cancel-booking-id="${b.id}" onclick="adminCancelBooking(${b.id})">
       Cancel Booking
     </button>
   </div>
@@ -1721,7 +1812,30 @@ async function loadAdminStats() {
   document.getElementById("available-rooms").innerText = data.availableToday;
 }
 
+
+
+
+
 if (window.location.pathname.includes("admin.html")) {
   loadAdminStats();
   loadAdminRooms();
+}
+
+
+const adminCancelPopupClose = document.getElementById(
+  "admin-cancel-popup-close"
+);
+
+if (adminCancelPopupClose) {
+  adminCancelPopupClose.addEventListener("click", closeAdminCancelPopup);
+}
+
+const adminCancelPopup = document.getElementById("admin-cancel-popup");
+
+if (adminCancelPopup) {
+  adminCancelPopup.addEventListener("click", (event) => {
+    if (event.target === adminCancelPopup) {
+      closeAdminCancelPopup();
+    }
+  });
 }
