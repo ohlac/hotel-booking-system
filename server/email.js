@@ -60,14 +60,14 @@ async function sendRegistrationEmail({ email, username, fullName }) {
 
     return sendEmail({
         to: email,
-        subject: 'Welcome to Hotel Booking',
+        subject: 'Welcome to Hotel California!',
         text: `Hi ${fullName || username || 'there'}, your account has been created successfully. You can log in here: ${frontendUrl}/index.html`,
         html: `
-            <h2>Welcome to Hotel Booking!</h2>
+            <h2>Welcome to Hotel California!</h2>
             <p>Hi ${safeName},</p>
             <p>Your account has been created successfully.</p>
             <p>
-                <a href="${escapeHtml(frontendUrl)}/index.html">Go to Hotel Booking</a>
+                <a href="${escapeHtml(frontendUrl)}/index.html">Go to Hotel California</a>
             </p>
         `
     });
@@ -88,7 +88,7 @@ async function sendBookingConfirmedEmail({
         to,
         subject: `Booking confirmed #${bookingId}`,
         text:
-            `Hi ${fullName || 'there'}, your booking has been confirmed.\n\n` +
+            `Hi ${fullName || 'there'}, your booking at Hotel California has been confirmed.\n\n` +
             `Booking ID: #${bookingId}\n` +
             `Room: ${roomNumber} - ${roomType}\n` +
             `Check-in: ${formatDate(startDate)}\n` +
@@ -96,7 +96,7 @@ async function sendBookingConfirmedEmail({
         html: `
             <h2>Booking confirmed</h2>
             <p>Hi ${safeName},</p>
-            <p>Your booking has been confirmed.</p>
+            <p>Your booking at Hotel California has been confirmed.</p>
             <ul>
                 <li><strong>Booking ID:</strong> #${escapeHtml(bookingId)}</li>
                 <li><strong>Room:</strong> ${escapeHtml(roomNumber)} - ${escapeHtml(roomType)}</li>
@@ -123,7 +123,7 @@ async function sendBookingCancelledEmail({
         to,
         subject: `Booking cancelled #${bookingId}`,
         text:
-            `Hi ${fullName || 'there'}, your booking has been cancelled.\n\n` +
+            `Hi ${fullName || 'there'}, your booking at Hotel California has been cancelled.\n\n` +
             `Booking ID: #${bookingId}\n` +
             `Room: ${roomNumber} - ${roomType}\n` +
             `Check-in: ${formatDate(startDate)}\n` +
@@ -131,7 +131,7 @@ async function sendBookingCancelledEmail({
         html: `
             <h2>Booking cancelled</h2>
             <p>Hi ${safeName},</p>
-            <p>Your booking has been cancelled.</p>
+            <p>Your booking at Hotel California has been cancelled.</p>
             <ul>
                 <li><strong>Booking ID:</strong> #${escapeHtml(bookingId)}</li>
                 <li><strong>Room:</strong> ${escapeHtml(roomNumber)} - ${escapeHtml(roomType)}</li>
@@ -147,13 +147,12 @@ async function sendUserUpdatedEmail({ to, fullName }) {
 
     return sendEmail({
         to,
-        subject: 'Your Hotel Booking account was updated',
-        text: `Hi ${fullName || 'there'}, your account details were updated successfully. If this was not you, please contact support.`,
+        subject: 'Your Hotel California account was updated',
+        text: `Hi ${fullName || 'there'}, your account details were updated successfully.`,
         html: `
             <h2>Account updated</h2>
             <p>Hi ${safeName},</p>
             <p>Your account details were updated successfully.</p>
-            <p>If this was not you, please contact support immediately.</p>
         `
     });
 }
@@ -164,24 +163,22 @@ async function sendPasswordResetEmail({ to, fullName, resetLink }) {
 
     return sendEmail({
         to,
-        subject: 'Reset your Hotel Booking password',
+        subject: 'Reset your Hotel California password',
         text:
             `Hi ${fullName || 'there'},\n\n` +
-            `You requested a password reset for your Hotel Booking account.\n\n` +
+            `You requested a password reset for your Hotel California account.\n\n` +
             `Use this link to reset your password:\n${resetLink}\n\n` +
-            `This link is valid for 30 minutes.\n\n` +
-            `If you did not request this, you can ignore this email.`,
+            `This link is valid for 30 minutes.\n\n`,
         html: `
             <h2>Reset your password</h2>
             <p>Hi ${safeName},</p>
-            <p>You requested a password reset for your Hotel Booking account.</p>
+            <p>You requested a password reset for your Hotel California account.</p>
             <p>
                 <a href="${safeResetLink}" style="display:inline-block;padding:12px 18px;background:#d4af37;color:#111;text-decoration:none;border-radius:8px;font-weight:bold;">
                     Reset password
                 </a>
             </p>
             <p>This link is valid for <strong>30 minutes</strong>.</p>
-            <p>If you did not request this, you can ignore this email.</p>
         `
     });
 }
